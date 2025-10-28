@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="sidebar(active)">
+    <div class="list-group">
+        <a href="/admin/users" class="list-group-item list-group-item-action" th:classappend="${active}=='users' ? ' active' : ''"><i class="bi bi-people"></i> Người dùng</a>
+        <a href="/admin/courses" class="list-group-item list-group-item-action" th:classappend="${active}=='courses' ? ' active' : ''"><i class="bi bi-book"></i> Khóa học</a>
+        <a href="/admin/lessons" class="list-group-item list-group-item-action" th:classappend="${active}=='lessons' ? ' active' : ''"><i class="bi bi-journal-text"></i> Bài học</a>
+        <a href="/admin/exercises" class="list-group-item list-group-item-action" th:classappend="${active}=='exercises' ? ' active' : ''"><i class="bi bi-pencil-square"></i> Bài tập</a>
+        <a href="/admin/piano-questions" class="list-group-item list-group-item-action" th:classappend="${active}=='piano-questions' ? ' active' : ''"><i class="bi bi-question-circle"></i> Câu hỏi Piano</a>
+        <a href="/admin/songs" class="list-group-item list-group-item-action" th:classappend="${active}=='songs' ? ' active' : ''"><i class="bi bi-music-note-list"></i> Bài hát</a>
+        <a href="/admin/achievements" class="list-group-item list-group-item-action" th:classappend="${active}=='achievements' ? ' active' : ''"><i class="bi bi-trophy"></i> Thành tích</a>
+        <a href="/admin/user-progress" class="list-group-item list-group-item-action" th:classappend="${active}=='user-progress' ? ' active' : ''"><i class="bi bi-graph-up"></i> Tiến độ học</a>
+        <a href="/admin/exercise-results" class="list-group-item list-group-item-action" th:classappend="${active}=='exercise-results' ? ' active' : ''"><i class="bi bi-check2-square"></i> Kết quả BT</a>
+        <a href="/admin/user-achievements" class="list-group-item list-group-item-action" th:classappend="${active}=='user-achievements' ? ' active' : ''"><i class="bi bi-award"></i> Thành tích User</a>
+        <a href="/admin/practice-sessions" class="list-group-item list-group-item-action" th:classappend="${active}=='practice-sessions' ? ' active' : ''"><i class="bi bi-clock-history"></i> Lịch sử LT</a>
+        <a href="/admin/daily-goals" class="list-group-item list-group-item-action" th:classappend="${active}=='daily-goals' ? ' active' : ''"><i class="bi bi-target"></i> Mục tiêu</a>
+        <a href="/admin/favorites" class="list-group-item list-group-item-action" th:classappend="${active}=='favorites' ? ' active' : ''"><i class="bi bi-heart"></i> Yêu thích</a>
+    </div>
+</th:block>
+</body>
+</html>
+
+

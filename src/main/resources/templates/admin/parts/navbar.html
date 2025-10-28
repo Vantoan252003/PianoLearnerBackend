@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="navbar">
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/admin/dashboard"><i class="bi bi-music-note-beamed"></i> Piano Learn Admin</a>
+            <button class="btn btn-outline-light btn-sm" onclick="logout()">Đăng xuất</button>
+        </div>
+    </nav>
+    <script>
+        (function ensureToken(){
+            const token = localStorage.getItem('adminToken');
+            if(!token){ window.location.href = '/admin/login'; }
+        })();
+        function logout(){
+            if (confirm('Bạn có chắc chắn muốn đăng xuất?')) {
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = '/admin/login';
+            }
+        }
+    </script>
+</th:block>
+</body>
+</html>
+
+

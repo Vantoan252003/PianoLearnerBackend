@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Bài tập - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('exercises')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Quản lý Bài tập</h2>
+                    <button class="btn btn-primary" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Thêm bài tập</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Tiêu đề</th>
+                                <th>Bài học</th>
+                                <th>Loại</th>
+                                <th>Độ khó</th>
+                                <th>Điểm đạt</th>
+                                <th>Điểm tối đa</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dataModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Thêm bài tập</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dataForm">
+                        <input type="hidden" id="exerciseId">
+                        <div class="mb-3">
+                            <label class="form-label">Bài học <span class="text-danger">*</span></label>
+                            <select class="form-select" id="lessonId" required></select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="exerciseTitle" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Loại bài tập</label>
+                                    <input type="text" class="form-control" id="exerciseType">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Độ khó</label>
+                                    <select class="form-select" id="difficulty">
+                                        <option value="">-- Chọn --</option>
+                                        <option value="Easy">Easy</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Hard">Hard</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">URL MIDI File</label>
+                                    <input type="text" class="form-control" id="midiFileUrl">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">URL Sheet Music</label>
+                                    <input type="text" class="form-control" id="sheetMusicUrl">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">URL Demo Audio</label>
+                                    <input type="text" class="form-control" id="demoAudioUrl">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Điểm đạt</label>
+                                    <input type="number" class="form-control" id="targetScore" value="80">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Điểm tối đa</label>
+                                    <input type="number" class="form-control" id="maxScore" value="100">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="saveData()">Lưu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = '/api/admin/exercises';
+        const token = localStorage.getItem('adminToken');
+        let editMode = false;
+        let lessons = [];
+
+        if (!token) window.location.href = '/admin/login';
+
+        async function loadLessons() {
+            try {
+                const response = await fetch('/api/admin/lessons', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                lessons = await response.json();
+                const select = document.getElementById('lessonId');
+                select.innerHTML = '<option value="">-- Chọn bài học --</option>';
+                lessons.forEach(l => {
+                    select.innerHTML += `<option value="${l.lessonId}">${l.lessonTitle}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading lessons:', error);
+            }
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(API_URL, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                const data = await response.json();
+                renderTable(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.exerciseId}</td>
+                    <td>${item.exerciseTitle}</td>
+                    <td>${item.lesson ? item.lesson.lessonTitle : '-'}</td>
+                    <td>${item.exerciseType || '-'}</td>
+                    <td><span class="badge bg-warning">${item.difficulty || '-'}</span></td>
+                    <td>${item.targetScore || 80}</td>
+                    <td>${item.maxScore || 100}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editData(${item.exerciseId})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.exerciseId})"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddModal() {
+            editMode = false;
+            document.getElementById('modalTitle').textContent = 'Thêm bài tập';
+            document.getElementById('dataForm').reset();
+            document.getElementById('exerciseId').value = '';
+            new bootstrap.Modal(document.getElementById('dataModal')).show();
+        }
+
+        async function editData(id) {
+            editMode = true;
+            document.getElementById('modalTitle').textContent = 'Sửa bài tập';
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                document.getElementById('exerciseId').value = data.exerciseId;
+                document.getElementById('lessonId').value = data.lesson ? data.lesson.lessonId : '';
+                document.getElementById('exerciseTitle').value = data.exerciseTitle;
+                document.getElementById('exerciseType').value = data.exerciseType || '';
+                document.getElementById('difficulty').value = data.difficulty || '';
+                document.getElementById('midiFileUrl').value = data.midiFileUrl || '';
+                document.getElementById('sheetMusicUrl').value = data.sheetMusicUrl || '';
+                document.getElementById('demoAudioUrl').value = data.demoAudioUrl || '';
+                document.getElementById('targetScore').value = data.targetScore || 80;
+                document.getElementById('maxScore').value = data.maxScore || 100;
+                new bootstrap.Modal(document.getElementById('dataModal')).show();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const id = document.getElementById('exerciseId').value;
+            const data = {
+                lesson: { lessonId: parseInt(document.getElementById('lessonId').value) },
+                exerciseTitle: document.getElementById('exerciseTitle').value,
+                exerciseType: document.getElementById('exerciseType').value,
+                difficulty: document.getElementById('difficulty').value,
+                midiFileUrl: document.getElementById('midiFileUrl').value,
+                sheetMusicUrl: document.getElementById('sheetMusicUrl').value,
+                demoAudioUrl: document.getElementById('demoAudioUrl').value,
+                targetScore: parseInt(document.getElementById('targetScore').value) || 80,
+                maxScore: parseInt(document.getElementById('maxScore').value) || 100
+            };
+
+            try {
+                const url = editMode ? `${API_URL}/${id}` : API_URL;
+                const method = editMode ? 'PUT' : 'POST';
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert(editMode ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+                    bootstrap.Modal.getInstance(document.getElementById('dataModal')).hide();
+                    loadData();
+                } else {
+                    alert('Lỗi khi lưu dữ liệu!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi lưu dữ liệu!');
+            }
+        }
+
+        async function deleteData(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa bài tập này?')) return;
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    alert('Xóa thành công!');
+                    loadData();
+                } else {
+                    alert('Lỗi khi xóa dữ liệu!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi xóa dữ liệu!');
+            }
+        }
+
+        loadLessons();
+        loadData();
+    </script>
+</body>
+</html>

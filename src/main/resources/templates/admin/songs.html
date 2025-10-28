@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Bài hát - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('songs')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2>Quản lý Bài hát</h2>
+                    <button class="btn btn-primary" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Thêm bài hát</button>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Tiêu đề</th>
+                                <th>Nghệ sĩ</th>
+                                <th>Độ khó</th>
+                                <th>Thời lượng (s)</th>
+                                <th>Điểm phổ biến</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="dataModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Thêm bài hát</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="dataForm">
+                        <input type="hidden" id="songId">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="songTitle" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Nghệ sĩ</label>
+                                    <input type="text" class="form-control" id="artist">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Độ khó</label>
+                                    <select class="form-select" id="difficultyLevel">
+                                        <option value="">-- Chọn --</option>
+                                        <option value="Easy">Easy</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Hard">Hard</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Thời lượng (giây)</label>
+                                    <input type="number" class="form-control" id="durationSeconds">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">Điểm phổ biến</label>
+                                    <input type="number" class="form-control" id="popularityScore" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">URL Thumbnail</label>
+                                    <input type="text" class="form-control" id="thumbnailUrl">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">URL MIDI File</label>
+                                    <input type="text" class="form-control" id="midiFileUrl">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">URL Sheet Music</label>
+                                    <input type="text" class="form-control" id="sheetMusicUrl">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">URL Audio</label>
+                                    <input type="text" class="form-control" id="audioUrl">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="saveData()">Lưu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = '/api/admin/songs';
+        const token = localStorage.getItem('adminToken');
+        let editMode = false;
+
+        if (!token) window.location.href = '/admin/login';
+
+        async function loadData() {
+            try {
+                const response = await fetch(API_URL, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                const data = await response.json();
+                renderTable(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.songId}</td>
+                    <td>${item.songTitle}</td>
+                    <td>${item.artist || '-'}</td>
+                    <td><span class="badge bg-success">${item.difficultyLevel || '-'}</span></td>
+                    <td>${item.durationSeconds || '-'}</td>
+                    <td>${item.popularityScore || 0}</td>
+                    <td>${item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editData(${item.songId})"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.songId})"><i class="bi bi-trash"></i></button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openAddModal() {
+            editMode = false;
+            document.getElementById('modalTitle').textContent = 'Thêm bài hát';
+            document.getElementById('dataForm').reset();
+            document.getElementById('songId').value = '';
+            new bootstrap.Modal(document.getElementById('dataModal')).show();
+        }
+
+        async function editData(id) {
+            editMode = true;
+            document.getElementById('modalTitle').textContent = 'Sửa bài hát';
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await response.json();
+                document.getElementById('songId').value = data.songId;
+                document.getElementById('songTitle').value = data.songTitle;
+                document.getElementById('artist').value = data.artist || '';
+                document.getElementById('difficultyLevel').value = data.difficultyLevel || '';
+                document.getElementById('durationSeconds').value = data.durationSeconds || '';
+                document.getElementById('popularityScore').value = data.popularityScore || 0;
+                document.getElementById('thumbnailUrl').value = data.thumbnailUrl || '';
+                document.getElementById('midiFileUrl').value = data.midiFileUrl || '';
+                document.getElementById('sheetMusicUrl').value = data.sheetMusicUrl || '';
+                document.getElementById('audioUrl').value = data.audioUrl || '';
+                new bootstrap.Modal(document.getElementById('dataModal')).show();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        async function saveData() {
+            const form = document.getElementById('dataForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            const id = document.getElementById('songId').value;
+            const data = {
+                songTitle: document.getElementById('songTitle').value,
+                artist: document.getElementById('artist').value,
+                difficultyLevel: document.getElementById('difficultyLevel').value,
+                durationSeconds: parseInt(document.getElementById('durationSeconds').value) || null,
+                popularityScore: parseInt(document.getElementById('popularityScore').value) || 0,
+                thumbnailUrl: document.getElementById('thumbnailUrl').value,
+                midiFileUrl: document.getElementById('midiFileUrl').value,
+                sheetMusicUrl: document.getElementById('sheetMusicUrl').value,
+                audioUrl: document.getElementById('audioUrl').value
+            };
+
+            try {
+                const url = editMode ? `${API_URL}/${id}` : API_URL;
+                const method = editMode ? 'PUT' : 'POST';
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    alert(editMode ? 'Cập nhật thành công!' : 'Thêm mới thành công!');
+                    bootstrap.Modal.getInstance(document.getElementById('dataModal')).hide();
+                    loadData();
+                } else {
+                    alert('Lỗi khi lưu dữ liệu!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi lưu dữ liệu!');
+            }
+        }
+
+        async function deleteData(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa bài hát này?')) return;
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.ok) {
+                    alert('Xóa thành công!');
+                    loadData();
+                } else {
+                    alert('Lỗi khi xóa dữ liệu!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi xóa dữ liệu!');
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>
