@@ -9,5 +9,5 @@ import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 
 @Repository
 public interface LessonRepository extends JpaRepository<Lesson, Integer> {
-    List<Lesson> findByCourse_CourseId(Long courseId);
+    List<Lesson> findByCourse_CourseId(Integer courseId);
 }

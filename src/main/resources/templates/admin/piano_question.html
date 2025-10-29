@@ -27,7 +27,6 @@
             <thead class="table-dark">
               <tr>
                 <th>ID</th>
-                <th>Nốt nhạc</th>
                 <th>MIDI</th>
                 <th>Độ khó</th>
                 <th>Bài học</th>
@@ -58,13 +57,10 @@
               <select id="lessonId" class="form-select" required></select>
             </div>
             <div class="mb-3">
-              <label class="form-label">Nốt nhạc</label>
-              <input type="text" id="noteName" class="form-control" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label">MIDI Number</label>
-              <input type="number" id="midiNumber" class="form-control" required>
-            </div>
+  <label class="form-label">MIDI Numbers</label>
+  <input type="text" id="midiNumbers" class="form-control" placeholder="Ví dụ: 40,43,47,52" required>
+</div>
+
             <div class="mb-3">
               <label class="form-label">Độ khó</label>
               <select id="difficulty" class="form-select">
@@ -119,8 +115,10 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${q.questionId}</td>
-          <td>${q.noteName}</td>
-          <td>${q.midiNumber}</td>
+          <td>${Array.isArray(q.midiNumbers) 
+      ? q.midiNumbers.join(', ') 
+      : JSON.parse(q.midiNumbers || '[]').join(', ')}</td>
+
           <td><span class="badge bg-info">${q.difficulty}</span></td>
           <td>${q.lesson ? q.lesson.lessonTitle : '-'}</td>
           <td>${q.createdAt ? new Date(q.createdAt).toLocaleString('vi-VN') : '-'}</td>
@@ -145,8 +143,10 @@
       const q = await res.json();
       document.getElementById('questionId').value = q.questionId;
       document.getElementById('lessonId').value = q.lesson ? q.lesson.lessonId : '';
-      document.getElementById('noteName').value = q.noteName;
-      document.getElementById('midiNumber').value = q.midiNumber;
+    const nums = Array.isArray(q.midiNumbers)
+      ? q.midiNumbers
+      : JSON.parse(q.midiNumbers || '[]');
+    document.getElementById('midiNumbers').value = nums.join(', ');
       document.getElementById('difficulty').value = q.difficulty;
       new bootstrap.Modal(document.getElementById('dataModal')).show();
     }
@@ -154,9 +154,11 @@
     async function saveData() {
       const id = document.getElementById('questionId').value;
       const data = {
-        lesson: { lessonId: parseInt(document.getElementById('lessonId').value) },
-        noteName: document.getElementById('noteName').value,
-        midiNumber: parseInt(document.getElementById('midiNumber').value),
+        lessonId: parseInt(document.getElementById('lessonId').value),
+        midiNumbers: document.getElementById('midiNumbers').value
+  .split(',')
+  .map(n => parseInt(n.trim()))
+  .filter(n => !isNaN(n)),
         difficulty: document.getElementById('difficulty').value
       };
 

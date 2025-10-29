@@ -11,9 +11,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.piano.learn.PianoLearn.dto.piano_question.PianoQuestionRequest;
+import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 import com.piano.learn.PianoLearn.entity.piano_question.PianoQuestion;
+import com.piano.learn.PianoLearn.repository.lesson.LessonRepository;
 import com.piano.learn.PianoLearn.service.piano_question_service.PianoQuestionService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -21,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AdminPianoQuestionController {
     private final PianoQuestionService pianoQuestionService;
+    private final LessonRepository lessonRepository;
 
     @GetMapping
     public List<PianoQuestion> getAll() {
@@ -33,20 +38,42 @@ public class AdminPianoQuestionController {
     }
 
     @PostMapping
-    public PianoQuestion create(@RequestBody PianoQuestion question) {
-        return pianoQuestionService.save(question);
+    public PianoQuestion create(@Valid @RequestBody PianoQuestionRequest req) {
+        Lesson lesson = lessonRepository.findById(req.getLessonId().intValue()).orElse(null);
+        if (lesson == null) {
+            throw new IllegalArgumentException("Lesson with id " + req.getLessonId() + " not found");
+        }
+        PianoQuestion q = PianoQuestion.builder()
+            .lesson(lesson)
+            .midiNumbers(toJsonArray(req.getMidiNumbers()))
+            .difficulty(req.getDifficulty())
+            .build();
+        return pianoQuestionService.save(q);
     }
 
     @PutMapping("/{id}")
-    public PianoQuestion update(@PathVariable Long id, @RequestBody PianoQuestion updated) {
+    public PianoQuestion update(@PathVariable Long id, @RequestBody PianoQuestionRequest req) {
         PianoQuestion existing = pianoQuestionService.findById(id);
         if (existing == null) return null;
 
-        existing.setNoteName(updated.getNoteName());
-        existing.setMidiNumber(updated.getMidiNumber());
-        existing.setDifficulty(updated.getDifficulty());
-        existing.setLesson(updated.getLesson());
+        existing.setMidiNumbers(toJsonArray(req.getMidiNumbers()));
+        existing.setDifficulty(req.getDifficulty());
+        if (req.getLessonId() != null) {
+            Lesson lesson = lessonRepository.findById(req.getLessonId().intValue()).orElse(null);
+            existing.setLesson(lesson);
+        }
         return pianoQuestionService.save(existing);
+    }
+
+    private String toJsonArray(java.util.List<Integer> nums) {
+        if (nums == null) return "[]";
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < nums.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append(nums.get(i));
+        }
+        sb.append(']');
+        return sb.toString();
     }
 
     @DeleteMapping("/{id}")

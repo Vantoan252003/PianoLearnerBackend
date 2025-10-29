@@ -38,11 +38,8 @@ public class PianoQuestion {
     @JoinColumn(name = "lesson_id")
     private Lesson lesson; 
 
-    @Column(nullable = false, length = 10)
-    private String noteName;
-
-    @Column(nullable = false)
-    private Integer midiNumber;
+    @Column(nullable = false, columnDefinition = "json") 
+    private String midiNumbers;
 
     @Column(length = 50)
     private String difficulty;

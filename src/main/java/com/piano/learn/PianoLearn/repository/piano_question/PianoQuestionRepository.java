@@ -11,6 +11,6 @@ public interface PianoQuestionRepository extends JpaRepository<PianoQuestion, Lo
 
     @Query(value = "SELECT * FROM piano_questions ORDER BY RAND() LIMIT 1", nativeQuery = true)
     PianoQuestion findRandom();
-
+    List<PianoQuestion> findByLesson_LessonId (Integer lessonId);
     List<PianoQuestion> findByDifficulty(String difficulty);
 }

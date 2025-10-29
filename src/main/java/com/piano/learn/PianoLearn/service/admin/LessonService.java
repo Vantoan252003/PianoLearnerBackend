@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 import com.piano.learn.PianoLearn.repository.lesson.LessonRepository;
 
-@Service
+@Service("adminLessonService")
 public class LessonService {
     
     @Autowired
