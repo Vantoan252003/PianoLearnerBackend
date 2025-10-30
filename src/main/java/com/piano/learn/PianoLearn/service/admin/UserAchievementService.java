@@ -18,6 +18,10 @@ public class UserAchievementService {
         return userAchievementRepository.findAll();
     }
     
+    public List<UserAchievement> getUserAchievementsByUserId(Integer userId) {
+        return userAchievementRepository.findByUser_UserId(userId);
+    }
+    
     public UserAchievement getUserAchievementById(Integer id) {
         return userAchievementRepository.findById(id).orElse(null);
     }
