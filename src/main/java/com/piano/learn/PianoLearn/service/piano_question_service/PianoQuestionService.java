@@ -25,7 +25,7 @@ public class PianoQuestionService {
     }
 
     public PianoQuestion findById(Long id) {
-        return pianoQuestionRepository.findById(id).orElse(null);
+        return pianoQuestionRepository.findByIdWithLesson(id).orElse(null);
     }
      public List<PianoQuestion> getPianoQuestionsByLessonId (Integer lessonId) {
         return pianoQuestionRepository.findByLesson_LessonId(lessonId);
@@ -45,6 +45,13 @@ public class PianoQuestionService {
         } catch (Exception e) {
             dto.setMidiNumbers(List.of()); // default empty list
         }
+        try {
+            List<List<Integer>> chordList = objectMapper.readValue(question.getChord(), new TypeReference<List<List<Integer>>>() {});
+            dto.setChord(chordList);
+        } catch (Exception e) {
+            dto.setChord(List.of()); // default empty list
+        }
+        dto.setQuestionCount(question.getQuestionCount());
         dto.setDifficulty(question.getDifficulty());
         return dto;
     }

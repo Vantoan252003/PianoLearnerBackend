@@ -41,6 +41,12 @@ public class PianoQuestion {
     @Column(nullable = false, columnDefinition = "json") 
     private String midiNumbers;
 
+    @Column(nullable = true, columnDefinition = "json")
+    private String chord;
+
+    @Column(name = "question_count", nullable = false, columnDefinition = "INT DEFAULT 0")
+    private Integer questionCount;
+
     @Column(length = 50)
     private String difficulty;
 

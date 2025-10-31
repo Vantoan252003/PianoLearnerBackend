@@ -28,6 +28,8 @@
               <tr>
                 <th>ID</th>
                 <th>MIDI</th>
+                <th>Chord</th>
+                <th>Question Count</th>
                 <th>Độ khó</th>
                 <th>Bài học</th>
                 <th>Ngày tạo</th>
@@ -49,7 +51,7 @@
           <h5 class="modal-title" id="modalTitle">Thêm câu hỏi</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body" style="max-height: 600px; overflow-y: auto;">
           <form id="dataForm">
             <input type="hidden" id="questionId">
             <div class="mb-3">
@@ -57,10 +59,22 @@
               <select id="lessonId" class="form-select" required></select>
             </div>
             <div class="mb-3">
-  <label class="form-label">MIDI Numbers</label>
-  <input type="text" id="midiNumbers" class="form-control" placeholder="Ví dụ: 40,43,47,52" required>
-</div>
-
+              <label class="form-label">MIDI Numbers (Nốt nhạc) <span class="text-danger">*</span></label>
+              <div id="midiCheckboxes" class="border p-3 rounded" style="max-height: 200px; overflow-y: auto;">
+                <!-- Checkboxes will be generated here -->
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Chord (Hợp âm)</label>
+              <div id="chordSection">
+                <div id="chordList"></div>
+                <button type="button" class="btn btn-sm btn-success mt-2" onclick="addChord()">+ Thêm hợp âm</button>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Question Count</label>
+              <input type="number" id="questionCount" class="form-control" placeholder="0" min="0">
+            </div>
             <div class="mb-3">
               <label class="form-label">Độ khó</label>
               <select id="difficulty" class="form-select">
@@ -80,13 +94,88 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
+  <script th:inline="none">
     const API_URL = '/api/admin/piano-questions';
     const token = localStorage.getItem('adminToken');
     let editMode = false;
     let lessons = [];
+    
+    // MIDI note mapping
+    const MIDI_NOTES = [
+      { midi: 60, name: 'C4', octave: 4 },
+      { midi: 61, name: 'C#4', octave: 4 },
+      { midi: 62, name: 'D4', octave: 4 },
+      { midi: 63, name: 'D#4', octave: 4 },
+      { midi: 64, name: 'E4', octave: 4 },
+      { midi: 65, name: 'F4', octave: 4 },
+      { midi: 66, name: 'F#4', octave: 4 },
+      { midi: 67, name: 'G4', octave: 4 },
+      { midi: 68, name: 'G#4', octave: 4 },
+      { midi: 69, name: 'A4', octave: 4 },
+      { midi: 70, name: 'A#4', octave: 4 },
+      { midi: 71, name: 'B4', octave: 4 },
+      { midi: 72, name: 'C5', octave: 5 },
+      { midi: 73, name: 'C#5', octave: 5 },
+      { midi: 74, name: 'D5', octave: 5 },
+      { midi: 75, name: 'D#5', octave: 5 },
+      { midi: 76, name: 'E5', octave: 5 },
+      { midi: 77, name: 'F5', octave: 5 },
+      { midi: 78, name: 'F#5', octave: 5 },
+      { midi: 79, name: 'G5', octave: 5 },
+      { midi: 80, name: 'G#5', octave: 5 },
+      { midi: 81, name: 'A5', octave: 5 },
+      { midi: 82, name: 'A#5', octave: 5 },
+      { midi: 83, name: 'B5', octave: 5 }
+    ];
 
     if (!token) window.location.href = '/admin/login';
+
+    function initMidiCheckboxes() {
+      const container = document.getElementById('midiCheckboxes');
+      container.innerHTML = '';
+      MIDI_NOTES.forEach(note => {
+        const div = document.createElement('div');
+        div.className = 'form-check form-check-inline';
+        div.innerHTML = `
+          <input class="form-check-input midi-checkbox" type="checkbox" id="midi_${note.midi}" value="${note.midi}">
+          <label class="form-check-label" for="midi_${note.midi}">${note.name}</label>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function addChord() {
+      const chordList = document.getElementById('chordList');
+      const chordId = 'chord_' + Date.now();
+      const div = document.createElement('div');
+      div.className = 'chord-item mb-3 p-2 border rounded';
+      div.id = chordId;
+      div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <label class="form-label mb-0">Hợp âm #${chordList.children.length + 1}</label>
+          <button type="button" class="btn btn-sm btn-danger" onclick="removeChord('${chordId}')">Xóa</button>
+        </div>
+        <div class="chord-checkboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 8px; border-radius: 4px;">
+          <!-- Checkboxes will be generated here -->
+        </div>
+      `;
+      chordList.appendChild(div);
+      
+      const checkboxContainer = div.querySelector('.chord-checkboxes');
+      MIDI_NOTES.forEach(note => {
+        const checkDiv = document.createElement('div');
+        checkDiv.className = 'form-check form-check-inline';
+        checkDiv.innerHTML = `
+          <input class="form-check-input chord-checkbox" type="checkbox" id="${chordId}_midi_${note.midi}" value="${note.midi}" data-chord-id="${chordId}">
+          <label class="form-check-label" for="${chordId}_midi_${note.midi}">${note.name}</label>
+        `;
+        checkboxContainer.appendChild(checkDiv);
+      });
+    }
+
+    function removeChord(chordId) {
+      document.getElementById(chordId).remove();
+    }
 
     async function loadLessons() {
       try {
@@ -108,25 +197,48 @@
       renderTable(data);
     }
 
+    function midiToNoteName(midi) {
+      const note = MIDI_NOTES.find(n => n.midi === parseInt(midi));
+      return note ? note.name : midi;
+    }
+
     function renderTable(data) {
       const tbody = document.getElementById('tableBody');
       tbody.innerHTML = '';
       data.forEach(q => {
+        let midiStr = '';
+        try {
+          const midiArr = Array.isArray(q.midiNumbers) 
+            ? q.midiNumbers 
+            : JSON.parse(q.midiNumbers || '[]');
+          midiStr = midiArr.map(m => midiToNoteName(m)).join(', ');
+        } catch (e) {
+          midiStr = 'Invalid MIDI';
+        }
+        let chordStr = '';
+        try {
+          const chordArr = Array.isArray(q.chord) 
+            ? q.chord 
+            : JSON.parse(q.chord || '[]');
+          chordStr = chordArr.map(chord => 
+            '(' + chord.map(m => midiToNoteName(m)).join(', ') + ')'
+          ).join(' | ');
+        } catch (e) {
+          chordStr = 'Invalid Chord';
+        }
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${q.questionId}</td>
-          <td>${Array.isArray(q.midiNumbers) 
-      ? q.midiNumbers.join(', ') 
-      : JSON.parse(q.midiNumbers || '[]').join(', ')}</td>
-
-          <td><span class="badge bg-info">${q.difficulty}</span></td>
-          <td>${q.lesson ? q.lesson.lessonTitle : '-'}</td>
-          <td>${q.createdAt ? new Date(q.createdAt).toLocaleString('vi-VN') : '-'}</td>
-          <td>
-            <button class="btn btn-sm btn-warning" onclick="editData(${q.questionId})"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-sm btn-danger" onclick="deleteData(${q.questionId})"><i class="bi bi-trash"></i></button>
-          </td>
-        `;
+        tr.innerHTML = 
+          '<td>' + q.questionId + '</td>' +
+          '<td>' + midiStr + '</td>' +
+          '<td>' + chordStr + '</td>' +
+          '<td>' + (q.questionCount || 0) + '</td>' +
+          '<td><span class="badge bg-info">' + q.difficulty + '</span></td>' +
+          '<td>' + (q.lesson ? q.lesson.lessonTitle : '-') + '</td>' +
+          '<td>' + (q.createdAt ? new Date(q.createdAt).toLocaleString('vi-VN') : '-') + '</td>' +
+          '<td>' +
+            '<button class="btn btn-sm btn-warning" onclick="editData(' + q.questionId + ')"><i class="bi bi-pencil"></i></button> ' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteData(' + q.questionId + ')"><i class="bi bi-trash"></i></button>' +
+          '</td>';
         tbody.appendChild(tr);
       });
     }
@@ -134,6 +246,9 @@
     function openAddModal() {
       editMode = false;
       document.getElementById('dataForm').reset();
+      document.getElementById('chordList').innerHTML = '';
+      initMidiCheckboxes();
+      document.querySelectorAll('.midi-checkbox').forEach(cb => cb.checked = false);
       new bootstrap.Modal(document.getElementById('dataModal')).show();
     }
 
@@ -141,29 +256,110 @@
       editMode = true;
       const res = await fetch(`${API_URL}/${id}`, { headers: { 'Authorization': `Bearer ${token}` }});
       const q = await res.json();
+      console.log('editData - loaded question:', q);
+      console.log('lesson object:', q.lesson);
       document.getElementById('questionId').value = q.questionId;
-      document.getElementById('lessonId').value = q.lesson ? q.lesson.lessonId : '';
-    const nums = Array.isArray(q.midiNumbers)
-      ? q.midiNumbers
-      : JSON.parse(q.midiNumbers || '[]');
-    document.getElementById('midiNumbers').value = nums.join(', ');
+      document.getElementById('lessonId').value = q.lesson ? String(q.lesson.lessonId) : '';
+      console.log('set lessonId to:', document.getElementById('lessonId').value);
+      
+      // Initialize checkboxes first
+      initMidiCheckboxes();
+      document.getElementById('chordList').innerHTML = '';
+      
+      // Set MIDI checkboxes
+      let midiNums = [];
+      try {
+        midiNums = Array.isArray(q.midiNumbers) ? q.midiNumbers : JSON.parse(q.midiNumbers || '[]');
+      } catch (e) {
+        midiNums = [];
+      }
+      midiNums.forEach(midi => {
+        const checkbox = document.getElementById('midi_' + midi);
+        if (checkbox) checkbox.checked = true;
+      });
+      
+      // Set chord checkboxes
+      let chords = [];
+      try {
+        chords = Array.isArray(q.chord) ? q.chord : JSON.parse(q.chord || '[]');
+      } catch (e) {
+        chords = [];
+      }
+      chords.forEach(chordNotes => {
+        const chordDiv = document.createElement('div');
+        const chordId = 'chord_' + Date.now() + Math.random();
+        chordDiv.className = 'chord-item mb-3 p-2 border rounded';
+        chordDiv.id = chordId;
+        let checkboxesHtml = `
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label mb-0">Hợp âm</label>
+            <button type="button" class="btn btn-sm btn-danger" onclick="removeChord('${chordId}')">Xóa</button>
+          </div>
+          <div class="chord-checkboxes" style="max-height: 150px; overflow-y: auto; border: 1px solid #ddd; padding: 8px; border-radius: 4px;">
+        `;
+        MIDI_NOTES.forEach(note => {
+          checkboxesHtml += `
+            <div class="form-check form-check-inline">
+              <input class="form-check-input chord-checkbox" type="checkbox" id="${chordId}_midi_${note.midi}" value="${note.midi}" data-chord-id="${chordId}" ${chordNotes.includes(note.midi) ? 'checked' : ''}>
+              <label class="form-check-label" for="${chordId}_midi_${note.midi}">${note.name}</label>
+            </div>
+          `;
+        });
+        checkboxesHtml += '</div>';
+        chordDiv.innerHTML = checkboxesHtml;
+        document.getElementById('chordList').appendChild(chordDiv);
+      });
+      
+      document.getElementById('questionCount').value = q.questionCount || 0;
       document.getElementById('difficulty').value = q.difficulty;
       new bootstrap.Modal(document.getElementById('dataModal')).show();
     }
 
     async function saveData() {
+      const lessonIdValue = document.getElementById('lessonId').value;
+      console.log('lessonIdValue:', lessonIdValue);
+      if (!lessonIdValue) {
+        alert('Vui lòng chọn bài học!');
+        return;
+      }
+      
+      // Get selected MIDI numbers from checkboxes
+      const selectedMidis = Array.from(document.querySelectorAll('.midi-checkbox:checked')).map(cb => parseInt(cb.value));
+      console.log('selectedMidis:', selectedMidis);
+      if (selectedMidis.length === 0) {
+        alert('Vui lòng chọn ít nhất một nốt nhạc!');
+        return;
+      }
+      
+      // Get chord notes
+      const chordItems = document.querySelectorAll('.chord-item');
+      const chords = [];
+      chordItems.forEach(chordItem => {
+        const selectedNotes = Array.from(chordItem.querySelectorAll('.chord-checkbox:checked')).map(cb => parseInt(cb.value));
+        if (selectedNotes.length > 0) {
+          chords.push(selectedNotes);
+        }
+      });
+      console.log('chords:', chords);
+      
+      const questionCountValue = document.getElementById('questionCount').value;
+      const difficultyValue = document.getElementById('difficulty').value;
+      console.log('questionCount:', questionCountValue, 'difficulty:', difficultyValue);
+
       const id = document.getElementById('questionId').value;
+      console.log('id:', id, 'editMode:', editMode);
       const data = {
-        lessonId: parseInt(document.getElementById('lessonId').value),
-        midiNumbers: document.getElementById('midiNumbers').value
-  .split(',')
-  .map(n => parseInt(n.trim()))
-  .filter(n => !isNaN(n)),
-        difficulty: document.getElementById('difficulty').value
+        lessonId: parseInt(lessonIdValue),
+        midiNumbers: selectedMidis,
+        chord: chords,
+        questionCount: parseInt(questionCountValue) || 0,
+        difficulty: difficultyValue
       };
+      console.log('data to send:', data);
 
       const method = editMode ? 'PUT' : 'POST';
       const url = editMode ? `${API_URL}/${id}` : API_URL;
+      console.log('method:', method, 'url:', url);
 
       const res = await fetch(url, {
         method: method,
@@ -173,13 +369,16 @@
         },
         body: JSON.stringify(data)
       });
+      console.log('response status:', res.status, 'ok:', res.ok);
 
       if (res.ok) {
         alert('Lưu thành công!');
         bootstrap.Modal.getInstance(document.getElementById('dataModal')).hide();
         loadData();
       } else {
-        alert('Lỗi khi lưu!');
+        const errorText = await res.text();
+        console.log('error response:', errorText);
+        alert('Lỗi khi lưu: ' + errorText);
       }
     }
 

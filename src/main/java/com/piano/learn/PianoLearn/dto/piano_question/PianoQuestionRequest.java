@@ -10,8 +10,11 @@ public class PianoQuestionRequest {
     @NotNull
     private Long lessonId;
     private List<Integer> midiNumbers;
+    private List<List<Integer>> chord;
+    private Integer questionCount;
     private String difficulty;
 }
+
 
 
 

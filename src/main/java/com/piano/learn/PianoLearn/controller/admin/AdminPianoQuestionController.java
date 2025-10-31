@@ -46,6 +46,8 @@ public class AdminPianoQuestionController {
         PianoQuestion q = PianoQuestion.builder()
             .lesson(lesson)
             .midiNumbers(toJsonArray(req.getMidiNumbers()))
+            .chord(toJsonArrayOfArrays(req.getChord()))
+            .questionCount(req.getQuestionCount())
             .difficulty(req.getDifficulty())
             .build();
         return pianoQuestionService.save(q);
@@ -57,6 +59,8 @@ public class AdminPianoQuestionController {
         if (existing == null) return null;
 
         existing.setMidiNumbers(toJsonArray(req.getMidiNumbers()));
+        existing.setChord(toJsonArrayOfArrays(req.getChord()));
+        existing.setQuestionCount(req.getQuestionCount());
         existing.setDifficulty(req.getDifficulty());
         if (req.getLessonId() != null) {
             Lesson lesson = lessonRepository.findById(req.getLessonId().intValue()).orElse(null);
@@ -71,6 +75,23 @@ public class AdminPianoQuestionController {
         for (int i = 0; i < nums.size(); i++) {
             if (i > 0) sb.append(',');
             sb.append(nums.get(i));
+        }
+        sb.append(']');
+        return sb.toString();
+    }
+
+    private String toJsonArrayOfArrays(java.util.List<java.util.List<Integer>> chords) {
+        if (chords == null) return "[]";
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < chords.size(); i++) {
+            if (i > 0) sb.append(',');
+            sb.append('[');
+            java.util.List<Integer> inner = chords.get(i);
+            for (int j = 0; j < inner.size(); j++) {
+                if (j > 0) sb.append(',');
+                sb.append(inner.get(j));
+            }
+            sb.append(']');
         }
         sb.append(']');
         return sb.toString();
