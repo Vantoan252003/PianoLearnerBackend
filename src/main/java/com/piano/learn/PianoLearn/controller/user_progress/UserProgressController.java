@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.piano.learn.PianoLearn.dto.progress.UpdateUserProgressRequest;
+import com.piano.learn.PianoLearn.dto.progress.UserProgressResponse;
 import com.piano.learn.PianoLearn.entity.auth.User;
-import com.piano.learn.PianoLearn.entity.progress.UserProgress;
 import com.piano.learn.PianoLearn.service.UserService;
 import com.piano.learn.PianoLearn.service.user_progress.UserProgressService;
 
@@ -34,36 +34,36 @@ public class UserProgressController {
     @Autowired
     private UserService userService;
 
-    @PostMapping("/update")
-    public ResponseEntity<UserProgress> updateProgress(@Valid @RequestBody UpdateUserProgressRequest request) {
+    @PostMapping()
+    public ResponseEntity<UserProgressResponse> updateProgress(@Valid @RequestBody UpdateUserProgressRequest request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findUserByEmail(email);
         Integer userId = currentUser.getUserId();
 
-        UserProgress updatedProgress = userProgressService.saveOrUpdateProgress(userId, request);
+        UserProgressResponse updatedProgress = userProgressService.saveOrUpdateProgress(userId, request);
         return ResponseEntity.ok(updatedProgress);
     }
 
-    @GetMapping("/user")
-    public ResponseEntity<List<UserProgress>> getUserProgress() {
+    @GetMapping()
+    public ResponseEntity<List<UserProgressResponse>> getUserProgress() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findUserByEmail(email);
         Integer userId = currentUser.getUserId();
 
-        List<UserProgress> progressList = userProgressService.getUserProgress(userId);
+        List<UserProgressResponse> progressList = userProgressService.getUserProgress(userId);
         return ResponseEntity.ok(progressList);
     }
 
     @GetMapping("/lesson/{lessonId}")
-    public ResponseEntity<UserProgress> getUserProgressForLesson(@PathVariable Integer lessonId) {
+    public ResponseEntity<UserProgressResponse> getUserProgressForLesson(@PathVariable Integer lessonId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User currentUser = userService.findUserByEmail(email);
         Integer userId = currentUser.getUserId();
 
-        Optional<UserProgress> progress = userProgressService.getUserProgressForLesson(userId, lessonId);
+        Optional<UserProgressResponse> progress = userProgressService.getUserProgressForLesson(userId, lessonId);
         return progress.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 }

@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.piano.learn.PianoLearn.dto.progress.UpdateUserProgressRequest;
+import com.piano.learn.PianoLearn.dto.progress.UserProgressResponse;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 import com.piano.learn.PianoLearn.entity.progress.UserProgress;
@@ -19,7 +20,7 @@ public class UserProgressService {
     @Autowired
     private UserProgressRepository userProgressRepository;
 
-    public UserProgress saveOrUpdateProgress(Integer userId, UpdateUserProgressRequest request) {
+    public UserProgressResponse saveOrUpdateProgress(Integer userId, UpdateUserProgressRequest request) {
         Optional<UserProgress> existingProgress = userProgressRepository.findByUser_UserIdAndLesson_LessonId(
             userId, request.getLessonId());
 
@@ -54,14 +55,51 @@ public class UserProgressService {
         }
 
         progress.setLastAccessed(LocalDateTime.now());
-        return userProgressRepository.save(progress);
+        UserProgress savedProgress = userProgressRepository.save(progress);
+
+        // Map to response
+        UserProgressResponse response = new UserProgressResponse();
+        response.setProgressId(savedProgress.getProgressId());
+        response.setUserId(savedProgress.getUser().getUserId());
+        response.setLessonId(savedProgress.getLesson().getLessonId());
+        response.setIsCompleted(savedProgress.getIsCompleted());
+        response.setCompletionPercentage(savedProgress.getCompletionPercentage());
+        response.setTimeSpentMinutes(savedProgress.getTimeSpentMinutes());
+        response.setLastAccessed(savedProgress.getLastAccessed());
+        response.setCompletedAt(savedProgress.getCompletedAt());
+
+        return response;
     }
 
-    public List<UserProgress> getUserProgress(Integer userId) {
-        return userProgressRepository.findByUser_UserId(userId);
+    public List<UserProgressResponse> getUserProgress(Integer userId) {
+        List<UserProgress> progresses = userProgressRepository.findByUser_UserId(userId);
+        return progresses.stream().map(p -> {
+            UserProgressResponse response = new UserProgressResponse();
+            response.setProgressId(p.getProgressId());
+            response.setUserId(p.getUser().getUserId());
+            response.setLessonId(p.getLesson().getLessonId());
+            response.setIsCompleted(p.getIsCompleted());
+            response.setCompletionPercentage(p.getCompletionPercentage());
+            response.setTimeSpentMinutes(p.getTimeSpentMinutes());
+            response.setLastAccessed(p.getLastAccessed());
+            response.setCompletedAt(p.getCompletedAt());
+            return response;
+        }).toList();
     }
 
-    public Optional<UserProgress> getUserProgressForLesson(Integer userId, Integer lessonId) {
-        return userProgressRepository.findByUser_UserIdAndLesson_LessonId(userId, lessonId);
+    public Optional<UserProgressResponse> getUserProgressForLesson(Integer userId, Integer lessonId) {
+        Optional<UserProgress> progress = userProgressRepository.findByUser_UserIdAndLesson_LessonId(userId, lessonId);
+        return progress.map(p -> {
+            UserProgressResponse response = new UserProgressResponse();
+            response.setProgressId(p.getProgressId());
+            response.setUserId(p.getUser().getUserId());
+            response.setLessonId(p.getLesson().getLessonId());
+            response.setIsCompleted(p.getIsCompleted());
+            response.setCompletionPercentage(p.getCompletionPercentage());
+            response.setTimeSpentMinutes(p.getTimeSpentMinutes());
+            response.setLastAccessed(p.getLastAccessed());
+            response.setCompletedAt(p.getCompletedAt());
+            return response;
+        });
     }
 }

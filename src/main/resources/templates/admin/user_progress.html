@@ -28,9 +28,11 @@
                                 <th>ID</th>
                                 <th>User</th>
                                 <th>Bài học</th>
-                                <th>Trạng thái</th>
-                                <th>Điểm</th>
-                                <th>Ngày cập nhật</th>
+                                <th>Hoàn thành</th>
+                                <th>Phần trăm hoàn thành</th>
+                                <th>Thời gian học (phút)</th>
+                                <th>Lần cuối truy cập</th>
+                                <th>Hoàn thành lúc</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -58,9 +60,11 @@
                     <td>${p.progressId}</td>
                     <td>${p.user ? p.user.fullName : '-'}</td>
                     <td>${p.lesson ? p.lesson.lessonTitle : '-'}</td>
-                    <td>${p.status || '-'}</td>
-                    <td>${p.score || '-'}</td>
-                    <td>${p.updatedAt ? new Date(p.updatedAt).toLocaleString('vi-VN') : '-'}</td>
+                    <td>${p.isCompleted ? 'Có' : 'Không'}</td>
+                    <td>${p.completionPercentage}%</td>
+                    <td>${p.timeSpentMinutes}</td>
+                    <td>${p.lastAccessed ? new Date(p.lastAccessed).toLocaleString('vi-VN') : '-'}</td>
+                    <td>${p.completedAt ? new Date(p.completedAt).toLocaleString('vi-VN') : '-'}</td>
                     <td><button class='btn btn-sm btn-danger' onclick='deleteData(${p.progressId})'><i class='bi bi-trash'></i></button></td>
                 `;
                 tbody.appendChild(tr);
