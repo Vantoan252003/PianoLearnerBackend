@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
 import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
+import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
 import com.piano.learn.PianoLearn.entity.achievement.UserAchievement;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.progress.UserProgress;
@@ -138,6 +139,57 @@ public class UserService implements UserDetailsService {
                 .lastLogin(user.getLastLogin())
                 .lastPracticeDate(user.getLastPraceticeDate())
                 .build();
+    }
+
+    public List<UserRankingInfo> getAllUsersRanking() {
+        List<User> allUsers = userRepository.findAll();
+
+        // Convert to ranking info and sort by totalExp (descending)
+        List<UserRankingInfo> rankingList = allUsers.stream()
+                .map(user -> {
+                    List<UserProgress> progressList = userProgressRepository.findByUser_UserId(user.getUserId());
+                    
+                    int totalLessonsCompleted = (int) progressList.stream()
+                            .filter(UserProgress::getIsCompleted)
+                            .count();
+
+                    int totalLearningTimeMinutes = 0;
+                    for (UserProgress progress : progressList) {
+                        Integer timeSpent = progress.getTimeSpentMinutes();
+                        totalLearningTimeMinutes += (timeSpent == null ? 0 : timeSpent);
+                    }
+
+                    List<UserAchievement> userAchievements = userAchievementRepository.findByUser_UserId(user.getUserId());
+
+                    return UserRankingInfo.builder()
+                            .userId(user.getUserId())
+                            .fullName(user.getFullName())
+                            .email(user.getEmail())
+                            .avatarUrl(user.getAvatarUrl())
+                            .levelName(user.getLevelName())
+                            .totalExp(user.getTotalExp())
+                            .streakDays(user.getStreakDays())
+                            .totalLessonsCompleted(totalLessonsCompleted)
+                            .totalAchievementsUnlocked(userAchievements.size())
+                            .totalLearningTimeMinutes(totalLearningTimeMinutes)
+                            .build();
+                })
+                .sorted((a, b) -> {
+                    // Sort by totalExp descending (primary), then by streakDays descending (secondary)
+                    int expComparison = Integer.compare(b.getTotalExp(), a.getTotalExp());
+                    if (expComparison != 0) {
+                        return expComparison;
+                    }
+                    return Integer.compare(b.getStreakDays(), a.getStreakDays());
+                })
+                .collect(Collectors.toList());
+
+        // Assign ranking
+        for (int i = 0; i < rankingList.size(); i++) {
+            rankingList.get(i).setRanking(i + 1);
+        }
+
+        return rankingList;
     }
 
 }

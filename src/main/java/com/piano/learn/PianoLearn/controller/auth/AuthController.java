@@ -25,6 +25,7 @@ import com.piano.learn.PianoLearn.dto.auth.LoginResponse;
 import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
 import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
 import com.piano.learn.PianoLearn.dto.auth.UserInfo;
+import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.security.JwtUtil;
 import com.piano.learn.PianoLearn.service.UserService;
@@ -162,6 +163,18 @@ public class AuthController {
             UserDetailResponse userDetailResponse = userService.getUserDetailInfo(user.getUserId());
             
             return ResponseEntity.ok(userDetailResponse);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @GetMapping("/ranking")
+    public ResponseEntity<?> getRanking() {
+        try {
+            java.util.List<UserRankingInfo> rankingList = userService.getAllUsersRanking();
+            return ResponseEntity.ok(rankingList);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());

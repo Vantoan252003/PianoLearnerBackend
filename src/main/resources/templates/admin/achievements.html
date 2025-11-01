@@ -23,14 +23,16 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
+                    <table class="table table-striped table-hover table-sm">
                         <thead class="table-dark">
                             <tr>
                                 <th>ID</th>
+                                <th>Icon</th>
                                 <th>Tên</th>
                                 <th>Mô tả</th>
+                                <th>Loại yêu cầu</th>
+                                <th>Giá trị yêu cầu</th>
                                 <th>EXP thưởng</th>
-                                <th>Ngày tạo</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -42,7 +44,7 @@
     </div>
 
     <div class="modal fade" id="dataModal" tabindex="-1">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="modalTitle">Thêm thành tích</h5>
@@ -51,17 +53,42 @@
                 <div class="modal-body">
                     <form id="dataForm">
                         <input type="hidden" id="achievementId">
-                        <div class="mb-3">
-                            <label class="form-label">Tên <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="achievementName" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Tên <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="achievementName" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">EXP thưởng</label>
+                                    <input type="number" class="form-control" id="expReward" value="50" min="0">
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Mô tả</label>
-                            <textarea class="form-control" id="description" rows="3"></textarea>
+                            <textarea class="form-control" id="description" rows="3" placeholder="Nhập mô tả chi tiết cho thành tích này"></textarea>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Icon URL</label>
+                                    <input type="url" class="form-control" id="iconUrl" placeholder="https://example.com/icon.png">
+                                    <div id="iconPreview" class="mt-2"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Loại yêu cầu</label>
+                                    <input type="text" class="form-control" id="requirementType" placeholder="Ví dụ: LESSONS_COMPLETED, TOTAL_EXP, STREAK_DAYS">
+                                </div>
+                            </div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">EXP thưởng</label>
-                            <input type="number" class="form-control" id="expReward" value="10">
+                            <label class="form-label">Giá trị yêu cầu</label>
+                            <input type="number" class="form-control" id="requirementValue" placeholder="Nhập giá trị yêu cầu" min="0">
                         </div>
                     </form>
                 </div>
@@ -94,13 +121,17 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${a.achievementId}</td>
-                    <td>${a.achievementName}</td>
-                    <td>${a.description || '-'}</td>
-                    <td>${a.expReward || 10}</td>
-                    <td>${a.createdAt ? new Date(a.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" onclick="editData(${a.achievementId})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteData(${a.achievementId})"><i class="bi bi-trash"></i></button>
+                        ${a.iconUrl ? `<img src="${a.iconUrl}" alt="icon" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;">` : '<span class="text-muted">-</span>'}
+                    </td>
+                    <td><strong>${a.achievementName}</strong></td>
+                    <td>${a.description || '-'}</td>
+                    <td>${a.requirementType || '-'}</td>
+                    <td>${a.requirementValue || '-'}</td>
+                    <td><span class="badge bg-warning text-dark">${a.expReward || 50} EXP</span></td>
+                    <td>
+                        <button class="btn btn-sm btn-warning" onclick="editData(${a.achievementId})" title="Chỉnh sửa"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteData(${a.achievementId})" title="Xóa"><i class="bi bi-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -111,6 +142,9 @@
             editMode = false;
             document.getElementById('dataForm').reset();
             document.getElementById('achievementId').value = '';
+            document.getElementById('modalTitle').textContent = 'Thêm thành tích mới';
+            document.getElementById('expReward').value = '50';
+            document.getElementById('iconPreview').innerHTML = '';
             new bootstrap.Modal(document.getElementById('dataModal')).show();
         }
 
@@ -121,7 +155,17 @@
             document.getElementById('achievementId').value = a.achievementId;
             document.getElementById('achievementName').value = a.achievementName;
             document.getElementById('description').value = a.description || '';
-            document.getElementById('expReward').value = a.expReward || 10;
+            document.getElementById('expReward').value = a.expReward || 50;
+            document.getElementById('iconUrl').value = a.iconUrl || '';
+            document.getElementById('requirementType').value = a.requirementType || '';
+            document.getElementById('requirementValue').value = a.requirementValue || '';
+            
+            // Update modal title
+            document.getElementById('modalTitle').textContent = 'Chỉnh sửa thành tích';
+            
+            // Show icon preview if exists
+            updateIconPreview();
+            
             new bootstrap.Modal(document.getElementById('dataModal')).show();
         }
 
@@ -130,7 +174,10 @@
             const data = {
                 achievementName: document.getElementById('achievementName').value,
                 description: document.getElementById('description').value,
-                expReward: parseInt(document.getElementById('expReward').value) || 10
+                iconUrl: document.getElementById('iconUrl').value || null,
+                requirementType: document.getElementById('requirementType').value || null,
+                requirementValue: document.getElementById('requirementValue').value ? parseInt(document.getElementById('requirementValue').value) : null,
+                expReward: parseInt(document.getElementById('expReward').value) || 50
             };
             const method = editMode ? 'PUT' : 'POST';
             const url = editMode ? `${API_URL}/${id}` : API_URL;
@@ -155,6 +202,30 @@
                 alert('Đã xóa!');
                 loadData();
             } else { alert('Lỗi khi xóa!'); }
+        }
+
+        // Update icon preview when URL changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const iconUrlInput = document.getElementById('iconUrl');
+            if(iconUrlInput) {
+                iconUrlInput.addEventListener('change', updateIconPreview);
+                iconUrlInput.addEventListener('input', updateIconPreview);
+            }
+        });
+
+        function updateIconPreview() {
+            const iconUrl = document.getElementById('iconUrl').value;
+            const iconPreview = document.getElementById('iconPreview');
+            if(iconUrl) {
+                iconPreview.innerHTML = `
+                    <div class="border p-2 rounded" style="text-align: center;">
+                        <img src="${iconUrl}" alt="preview" style="max-width: 100px; max-height: 100px; object-fit: contain;">
+                        <p class="text-muted small mt-2">Icon preview</p>
+                    </div>
+                `;
+            } else {
+                iconPreview.innerHTML = '';
+            }
         }
 
         loadData();

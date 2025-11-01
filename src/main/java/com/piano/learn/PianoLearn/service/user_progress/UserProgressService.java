@@ -57,7 +57,7 @@ public class UserProgressService {
         progress.setLastAccessed(LocalDateTime.now());
         UserProgress savedProgress = userProgressRepository.save(progress);
 
-        // Map to response
+   
         UserProgressResponse response = new UserProgressResponse();
         response.setProgressId(savedProgress.getProgressId());
         response.setUserId(savedProgress.getUser().getUserId());

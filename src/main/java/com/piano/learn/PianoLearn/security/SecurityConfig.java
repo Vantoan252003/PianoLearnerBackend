@@ -35,7 +35,7 @@ public class SecurityConfig {
                 // Static resources - allowed without authentication
                 .requestMatchers("/admin-script.js", "/css/**", "/js/**", "/images/**").permitAll()
                 // Public endpoints - login and register
-                .requestMatchers("/", "/index", "/api/auth/login", "/api/auth/register", "/api/auth/checkmail", "/admin/login").permitAll()
+                .requestMatchers("/", "/index", "/api/auth/login", "/api/auth/register", "/api/auth/checkmail", "/admin/login", "/api/auth/ranking").permitAll()
                 // Admin view pages - allow access (token check done in JavaScript)
                 .requestMatchers("/admin/dashboard", "/admin/users", "/admin/courses", "/admin/lessons", 
                                 "/admin/exercises", "/admin/songs", "/admin/achievements", "/admin/user-progress",
