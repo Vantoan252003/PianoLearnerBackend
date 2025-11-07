@@ -191,5 +191,31 @@ public class UserService implements UserDetailsService {
 
         return rankingList;
     }
+     public User updateUser(Integer userId, String fullName, String email, String password, String avatarUrl, PasswordEncoder encoder) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (fullName != null && !fullName.isEmpty()) {
+            user.setFullName(fullName);
+        }
+        
+        if (email != null && !email.isEmpty() && !email.equals(user.getEmail())) {
+            if (userRepository.findByEmail(email).isPresent()) {
+                throw new RuntimeException("Email already exists");
+            }
+            user.setEmail(email);
+        }
+        
+        if (password != null && !password.isEmpty()) {
+            user.setPasswordHash(encoder.encode(password));
+        }
+        
+        if (avatarUrl != null && !avatarUrl.isEmpty()) {
+            user.setAvatarUrl(avatarUrl);
+        }
+
+        return userRepository.save(user);
+    }
+
 
 }

@@ -15,19 +15,24 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.piano.learn.PianoLearn.dto.auth.LoginRequest;
 import com.piano.learn.PianoLearn.dto.auth.LoginResponse;
 import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
+import com.piano.learn.PianoLearn.dto.auth.UpdateUserRequest;
 import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
 import com.piano.learn.PianoLearn.dto.auth.UserInfo;
 import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.security.JwtUtil;
+import com.piano.learn.PianoLearn.service.UploadService;
 import com.piano.learn.PianoLearn.service.UserService;
 
 import jakarta.validation.Valid;
@@ -46,7 +51,10 @@ public class AuthController {
     private UserService userService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; 
+    private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private UploadService uploadService; 
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -175,6 +183,50 @@ public class AuthController {
         try {
             java.util.List<UserRankingInfo> rankingList = userService.getAllUsersRanking();
             return ResponseEntity.ok(rankingList);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    @PutMapping("/user-info")
+    public ResponseEntity<?> updateUserInfo(
+            @Valid @RequestPart("data") UpdateUserRequest updateRequest,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userService.findUserByEmail(userDetails.getUsername());
+            String avatarUrl = null;
+            if (avatar != null && !avatar.isEmpty()) {
+                avatarUrl = uploadService.uploadAvatar(avatar);
+            }
+
+            // Update user information
+            User updatedUser = userService.updateUser(
+                user.getUserId(),
+                updateRequest.getFullName(),
+                updateRequest.getEmail(),
+                updateRequest.getPassword(),
+                avatarUrl,
+                passwordEncoder
+            );
+
+            UserDetailResponse userDetailResponse = userService.getUserDetailInfo(updatedUser.getUserId());
+
+            return ResponseEntity.ok(userDetailResponse);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
