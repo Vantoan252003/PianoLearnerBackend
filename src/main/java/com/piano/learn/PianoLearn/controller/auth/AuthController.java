@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.piano.learn.PianoLearn.dto.auth.LoginRequest;
 import com.piano.learn.PianoLearn.dto.auth.LoginResponse;
 import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
-import com.piano.learn.PianoLearn.dto.auth.UpdateUserRequest;
 import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
 import com.piano.learn.PianoLearn.dto.auth.UserInfo;
 import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
@@ -192,7 +191,8 @@ public class AuthController {
     
     @PutMapping("/user-info")
     public ResponseEntity<?> updateUserInfo(
-            @Valid @RequestPart("data") UpdateUserRequest updateRequest,
+            @RequestParam("fullName") String fullName,
+            @RequestParam("email") String email,
             @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
         try {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -205,6 +205,15 @@ public class AuthController {
 
             UserDetails userDetails = (UserDetails) authentication.getPrincipal();
             User user = userService.findUserByEmail(userDetails.getUsername());
+
+            // Basic validation
+            if (fullName != null && fullName.length() > 100) {
+                throw new RuntimeException("Full name must not exceed 100 characters");
+            }
+            if (email != null && (email.length() > 100 || !email.contains("@"))) {
+                throw new RuntimeException("Invalid email format");
+            }
+
             String avatarUrl = null;
             if (avatar != null && !avatar.isEmpty()) {
                 avatarUrl = uploadService.uploadAvatar(avatar);
@@ -213,9 +222,9 @@ public class AuthController {
             // Update user information
             User updatedUser = userService.updateUser(
                 user.getUserId(),
-                updateRequest.getFullName(),
-                updateRequest.getEmail(),
-                updateRequest.getPassword(),
+                fullName,
+                email,
+                null,
                 avatarUrl,
                 passwordEncoder
             );

@@ -34,6 +34,10 @@
                                 <th>Thời lượng (s)</th>
                                 <th>Điểm phổ biến</th>
                                 <th>Ngày tạo</th>
+                                <th>Thumbnail</th>
+                                <th>MIDI File</th>
+                                <th>Sheet Music</th>
+                                <th>Audio</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -102,16 +106,18 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">URL MIDI File</label>
-                                    <input type="text" class="form-control" id="midiFileUrl">
+                                    <label class="form-label">File MIDI</label>
+                                    <input type="file" class="form-control" id="midiFile" accept=".mid,.midi, .mxl, .xml">
+                                    <small class="form-text text-muted">Để trống nếu không muốn thay đổi</small>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label class="form-label">URL Sheet Music</label>
-                                    <input type="text" class="form-control" id="sheetMusicUrl">
+                                    <label class="form-label">File Sheet Music</label>
+                                    <input type="file" class="form-control" id="sheetMusicFile" accept=".pdf,.jpg,.png, .avif">
+                                    <small class="form-text text-muted">Để trống nếu không muốn thay đổi</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -169,6 +175,10 @@
                     <td>${item.durationSeconds || '-'}</td>
                     <td>${item.popularityScore || 0}</td>
                     <td>${item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td>${item.thumbnailUrl ? `<a href="${item.thumbnailUrl}" target="_blank">View</a>` : '-'}</td>
+                    <td>${item.midiFileUrl ? `<a href="${item.midiFileUrl}" target="_blank">Download</a>` : '-'}</td>
+                    <td>${item.sheetMusicUrl ? `<a href="${item.sheetMusicUrl}" target="_blank">View</a>` : '-'}</td>
+                    <td>${item.audioUrl ? `<a href="${item.audioUrl}" target="_blank">Play</a>` : '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="editData(${item.songId})"><i class="bi bi-pencil"></i></button>
                         <button class="btn btn-sm btn-danger" onclick="deleteData(${item.songId})"><i class="bi bi-trash"></i></button>
@@ -201,8 +211,7 @@
                 document.getElementById('durationSeconds').value = data.durationSeconds || '';
                 document.getElementById('popularityScore').value = data.popularityScore || 0;
                 document.getElementById('thumbnailUrl').value = data.thumbnailUrl || '';
-                document.getElementById('midiFileUrl').value = data.midiFileUrl || '';
-                document.getElementById('sheetMusicUrl').value = data.sheetMusicUrl || '';
+                // Note: File inputs cannot be pre-filled with existing URLs
                 document.getElementById('audioUrl').value = data.audioUrl || '';
                 new bootstrap.Modal(document.getElementById('dataModal')).show();
             } catch (error) {
@@ -219,17 +228,24 @@
             }
 
             const id = document.getElementById('songId').value;
-            const data = {
-                songTitle: document.getElementById('songTitle').value,
-                artist: document.getElementById('artist').value,
-                difficultyLevel: document.getElementById('difficultyLevel').value,
-                durationSeconds: parseInt(document.getElementById('durationSeconds').value) || null,
-                popularityScore: parseInt(document.getElementById('popularityScore').value) || 0,
-                thumbnailUrl: document.getElementById('thumbnailUrl').value,
-                midiFileUrl: document.getElementById('midiFileUrl').value,
-                sheetMusicUrl: document.getElementById('sheetMusicUrl').value,
-                audioUrl: document.getElementById('audioUrl').value
-            };
+            const formData = new FormData();
+            formData.append('songTitle', document.getElementById('songTitle').value);
+            formData.append('artist', document.getElementById('artist').value);
+            formData.append('difficultyLevel', document.getElementById('difficultyLevel').value);
+            formData.append('durationSeconds', document.getElementById('durationSeconds').value || '');
+            formData.append('popularityScore', document.getElementById('popularityScore').value || '0');
+            formData.append('thumbnailUrl', document.getElementById('thumbnailUrl').value);
+            formData.append('audioUrl', document.getElementById('audioUrl').value);
+            
+            const midiFile = document.getElementById('midiFile').files[0];
+            if (midiFile) {
+                formData.append('midiFile', midiFile);
+            }
+            
+            const sheetMusicFile = document.getElementById('sheetMusicFile').files[0];
+            if (sheetMusicFile) {
+                formData.append('sheetMusicFile', sheetMusicFile);
+            }
 
             try {
                 const url = editMode ? `${API_URL}/${id}` : API_URL;
@@ -237,10 +253,10 @@
                 const response = await fetch(url, {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
+                        // Do not set Content-Type for FormData, let browser set it with boundary
                     },
-                    body: JSON.stringify(data)
+                    body: formData
                 });
 
                 if (response.ok) {

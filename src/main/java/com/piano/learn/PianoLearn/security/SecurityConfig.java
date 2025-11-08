@@ -36,13 +36,10 @@ public class SecurityConfig {
                 .requestMatchers("/admin-script.js", "/css/**", "/js/**", "/images/**").permitAll()
                 // Public endpoints - login and register
                 .requestMatchers("/", "/index", "/api/auth/login", "/api/auth/register", "/api/auth/checkmail", "/admin/login", "/api/auth/ranking").permitAll()
-                // Admin view pages - allow access (token check done in JavaScript)
-                .requestMatchers("/admin/dashboard", "/admin/users", "/admin/courses", "/admin/lessons", 
-                                "/admin/exercises", "/admin/songs", "/admin/achievements", "/admin/user-progress",
-                                "/admin/exercise-results", "/admin/user-achievements", "/admin/practice-sessions",
-                                "/admin/daily-goals", "/admin/favorites", "/admin/piano-questions").permitAll()
+                .requestMatchers("/admin/**").permitAll()
                 // Admin API endpoints - require ADMIN role
                 .requestMatchers("/api/admin/**").hasAuthority("admin")
+                .requestMatchers("/api/songs").permitAll()
                 // Protected endpoints - require authentication
                 .requestMatchers("/api/auth/courses/**").authenticated()
                 // Any other request requires authentication
