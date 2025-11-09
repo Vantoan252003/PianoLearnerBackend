@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tải Ứng Dụng - PianoLearn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <style>
+  
+        .download-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 100px 0;
+            color: white;
+            text-align: center;
+        }
+        
+        .download-hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .download-hero p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+        
+        .download-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 40px;
+        }
+        
+        .download-btn {
+            background: white;
+            color: #333;
+            padding: 15px 40px;
+            border-radius: 15px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
+        .download-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            color: #667eea;
+        }
+        
+        .download-btn i {
+            font-size: 2.5rem;
+        }
+        
+        .download-info {
+            text-align: left;
+        }
+        
+        .download-label {
+            font-size: 0.9rem;
+            opacity: 0.7;
+            display: block;
+        }
+        
+        .download-store {
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        
+        .qr-section {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .qr-card {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .qr-code {
+            width: 250px;
+            height: 250px;
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .qr-code img {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .qr-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        
+        .qr-description {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        
+        .device-section {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+        
+        .device-card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            height: 100%;
+        }
+        
+        .device-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+        
+        .device-icon {
+            font-size: 4rem;
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .device-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .device-description {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .requirements-section {
+            padding: 80px 0;
+            background: white;
+        }
+        
+        .req-card {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .req-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .req-title i {
+            color: #667eea;
+        }
+        
+        .req-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .req-list li {
+            padding: 8px 0;
+            color: #555;
+        }
+        
+        .req-list li i {
+            color: #28a745;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-music"></i>
+                PianoLearn
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Trang chủ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/features">Tính năng</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/about">Giới thiệu</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/pricing">Bảng giá</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/contact">Liên hệ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-login" href="/admin/login">Đăng nhập</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Download Hero -->
+    <section class="download-hero">
+        <div class="container">
+            <h1>Tải Ứng Dụng PianoLearn</h1>
+            <p>Bắt đầu hành trình học piano ngay hôm nay!</p>
+            
+            <div class="download-buttons">
+                <a href="#" class="download-btn">
+                    <i class="fab fa-google-play"></i>
+                    <div class="download-info">
+                        <span class="download-label">Tải trên</span>
+                        <span class="download-store">Google Play</span>
+                    </div>
+                </a>
+                <a href="#" class="download-btn">
+                    <i class="fab fa-apple"></i>
+                    <div class="download-info">
+                        <span class="download-label">Tải trên</span>
+                        <span class="download-store">App Store</span>
+                    </div>
+                </a>
+                <a href="#" class="download-btn">
+                    <i class="fab fa-windows"></i>
+                    <div class="download-info">
+                        <span class="download-label">Tải cho</span>
+                        <span class="download-store">Windows</span>
+                    </div>
+                </a>
+                <a href="#" class="download-btn">
+                    <i class="fab fa-apple"></i>
+                    <div class="download-info">
+                        <span class="download-label">Tải cho</span>
+                        <span class="download-store">macOS</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- QR Code Section -->
+    <section class="qr-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="qr-card">
+                        <h2 class="qr-title">Quét Mã QR Để Tải Nhanh</h2>
+                        <p class="qr-description mb-4">
+                            Sử dụng camera điện thoại quét mã QR để tải ứng dụng ngay
+                        </p>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="qr-code">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://play.google.com/store" alt="QR Android">
+                                </div>
+                                <p><strong>Android</strong></p>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="qr-code">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://apps.apple.com" alt="QR iOS">
+                                </div>
+                                <p><strong>iOS</strong></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Device Compatibility -->
+    <section class="device-section">
+        <div class="container">
+            <h2 class="section-title">Tương Thích Với Mọi Thiết Bị</h2>
+            <div class="row">
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-mobile-alt"></i>
+                        </div>
+                        <h3 class="device-name">Smartphone</h3>
+                        <p class="device-description">
+                            Học mọi lúc, mọi nơi với ứng dụng di động tối ưu hóa
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-tablet-alt"></i>
+                        </div>
+                        <h3 class="device-name">Tablet</h3>
+                        <p class="device-description">
+                            Màn hình lớn giúp xem sheet nhạc dễ dàng hơn
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-laptop"></i>
+                        </div>
+                        <h3 class="device-name">Laptop</h3>
+                        <p class="device-description">
+                            Trải nghiệm học tập tốt nhất trên màn hình lớn
+                        </p>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 mb-4">
+                    <div class="device-card">
+                        <div class="device-icon">
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                        <h3 class="device-name">Desktop</h3>
+                        <p class="device-description">
+                            Làm việc chuyên nghiệp với phiên bản desktop
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- System Requirements -->
+    <section class="requirements-section">
+        <div class="container">
+            <h2 class="section-title">Yêu Cầu Hệ Thống</h2>
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="req-card">
+                        <h3 class="req-title">
+                            <i class="fab fa-android"></i>
+                            Android
+                        </h3>
+                        <ul class="req-list">
+                            <li><i class="fas fa-check"></i> Android 8.0 trở lên</li>
+                            <li><i class="fas fa-check"></i> RAM tối thiểu: 2GB</li>
+                            <li><i class="fas fa-check"></i> Dung lượng trống: 500MB</li>
+                            <li><i class="fas fa-check"></i> Kết nối Internet</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="req-card">
+                        <h3 class="req-title">
+                            <i class="fab fa-apple"></i>
+                            iOS
+                        </h3>
+                        <ul class="req-list">
+                            <li><i class="fas fa-check"></i> iOS 13.0 trở lên</li>
+                            <li><i class="fas fa-check"></i> iPhone 6s trở lên</li>
+                            <li><i class="fas fa-check"></i> Dung lượng trống: 500MB</li>
+                            <li><i class="fas fa-check"></i> Kết nối Internet</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="req-card">
+                        <h3 class="req-title">
+                            <i class="fab fa-windows"></i>
+                            Windows
+                        </h3>
+                        <ul class="req-list">
+                            <li><i class="fas fa-check"></i> Windows 10 trở lên</li>
+                            <li><i class="fas fa-check"></i> RAM tối thiểu: 4GB</li>
+                            <li><i class="fas fa-check"></i> Dung lượng trống: 1GB</li>
+                            <li><i class="fas fa-check"></i> Card âm thanh</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="req-card">
+                        <h3 class="req-title">
+                            <i class="fab fa-apple"></i>
+                            macOS
+                        </h3>
+                        <ul class="req-list">
+                            <li><i class="fas fa-check"></i> macOS 10.14 trở lên</li>
+                            <li><i class="fas fa-check"></i> RAM tối thiểu: 4GB</li>
+                            <li><i class="fas fa-check"></i> Dung lượng trống: 1GB</li>
+                            <li><i class="fas fa-check"></i> Card âm thanh</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-4 mb-4">
+                    <h4 class="footer-title">
+                        <i class="fas fa-music"></i> PianoLearn
+                    </h4>
+                    <p style="color: rgba(255,255,255,0.7);">
+                        Ứng dụng học piano thông minh số 1 Việt Nam. 
+                        Mang âm nhạc đến gần hơn với mọi người.
+                    </p>
+                    <div class="social-links mt-3">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="footer-title">Sản Phẩm</h5>
+                    <ul class="footer-links">
+                        <li><a href="/features">Tính năng</a></li>
+                        <li><a href="/pricing">Bảng giá</a></li>
+                        <li><a href="/download">Tải app</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="footer-title">Công Ty</h5>
+                    <ul class="footer-links">
+                        <li><a href="/about">Giới thiệu</a></li>
+                        <li><a href="/contact">Liên hệ</a></li>
+                        <li><a href="#">Tuyển dụng</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="footer-title">Hỗ Trợ</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Trung tâm trợ giúp</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#">Điều khoản</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-2 col-md-6 mb-4">
+                    <h5 class="footer-title">Cộng Đồng</h5>
+                    <ul class="footer-links">
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Forum</a></li>
+                        <li><a href="#">Sự kiện</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 PianoLearn. All rights reserved. Made with <i class="fas fa-heart" style="color: #e74c3c;"></i> in Vietnam</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/common.js"></script>
+</body>
+</html>

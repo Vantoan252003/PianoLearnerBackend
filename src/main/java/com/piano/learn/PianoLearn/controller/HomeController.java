@@ -8,7 +8,32 @@ public class HomeController {
     
     @GetMapping("/")
     public String home() {
-        return "redirect:/admin/login";
+        return "home";
+    }
+    
+    @GetMapping("/about")
+    public String about() {
+        return "about";
+    }
+    
+    @GetMapping("/features")
+    public String features() {
+        return "features";
+    }
+    
+    @GetMapping("/download")
+    public String download() {
+        return "download";
+    }
+    
+    @GetMapping("/pricing")
+    public String pricing() {
+        return "pricing";
+    }
+    
+    @GetMapping("/contact")
+    public String contact() {
+        return "contact";
     }
 }
 
