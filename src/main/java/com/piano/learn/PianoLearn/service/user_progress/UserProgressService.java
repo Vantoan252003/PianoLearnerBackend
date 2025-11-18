@@ -13,12 +13,16 @@ import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 import com.piano.learn.PianoLearn.entity.progress.UserProgress;
 import com.piano.learn.PianoLearn.repository.progress.UserProgressRepository;
+import com.piano.learn.PianoLearn.service.achievement.AchievementUnlockService;
 
 @Service("learnerUserProgressService")
 public class UserProgressService {
 
     @Autowired
     private UserProgressRepository userProgressRepository;
+
+    @Autowired
+    private AchievementUnlockService achievementUnlockService;
 
     public UserProgressResponse saveOrUpdateProgress(Integer userId, UpdateUserProgressRequest request) {
         Optional<UserProgress> existingProgress = userProgressRepository.findByUser_UserIdAndLesson_LessonId(
@@ -57,7 +61,11 @@ public class UserProgressService {
         progress.setLastAccessed(LocalDateTime.now());
         UserProgress savedProgress = userProgressRepository.save(progress);
 
-   
+        // Check for achievements if lesson completed
+        if (savedProgress.getIsCompleted()) {
+            achievementUnlockService.checkAndUnlockAchievements(userId);
+        }
+
         UserProgressResponse response = new UserProgressResponse();
         response.setProgressId(savedProgress.getProgressId());
         response.setUserId(savedProgress.getUser().getUserId());

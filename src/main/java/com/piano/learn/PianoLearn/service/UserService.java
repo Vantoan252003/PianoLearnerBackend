@@ -1,6 +1,7 @@
 package com.piano.learn.PianoLearn.service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +16,11 @@ import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
 import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
 import com.piano.learn.PianoLearn.entity.achievement.UserAchievement;
 import com.piano.learn.PianoLearn.entity.auth.User;
+import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 import com.piano.learn.PianoLearn.entity.progress.UserProgress;
 import com.piano.learn.PianoLearn.repository.achievement.UserAchievementRepository;
 import com.piano.learn.PianoLearn.repository.auth.UserRepository;
+import com.piano.learn.PianoLearn.repository.lesson.LessonRepository;
 import com.piano.learn.PianoLearn.repository.progress.UserProgressRepository;
 
 @Service
@@ -30,6 +33,9 @@ public class UserService implements UserDetailsService {
     
     @Autowired
     private UserAchievementRepository userAchievementRepository;
+    
+    @Autowired
+    private LessonRepository lessonRepository;
     public User registerUser (RegisterRequest registerRequest, PasswordEncoder encoder ){
         if (userRepository.findByEmail(registerRequest.getEmail()).isPresent()){
             throw  new RuntimeException("Username has existed");
@@ -217,5 +223,27 @@ public class UserService implements UserDetailsService {
         return userRepository.save(user);
     }
 
+    public void addExp(Integer userId, Integer exp) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setTotalExp(user.getTotalExp() + exp);
+        userRepository.save(user);
+    }
+
+    public boolean isCourseCompletedByUser(Integer userId, Integer courseId) {
+        // Lấy tất cả lessons của course
+        List<Lesson> lessons = lessonRepository.findByCourse_CourseId(courseId);
+        if (lessons.isEmpty()) {
+            return false;
+        }
+        // Kiểm tra user đã hoàn thành tất cả lessons
+        for (Lesson lesson : lessons) {
+            Optional<UserProgress> progressOpt = userProgressRepository.findByUser_UserIdAndLesson_LessonId(userId, lesson.getLessonId());
+            if (progressOpt.isEmpty() || !progressOpt.get().getIsCompleted()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }

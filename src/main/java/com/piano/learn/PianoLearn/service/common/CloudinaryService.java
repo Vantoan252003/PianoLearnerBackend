@@ -32,6 +32,34 @@ public class CloudinaryService {
         
         @SuppressWarnings("unchecked")
         Map<String, Object> uploadResult = (Map<String, Object>) cloudinary.uploader().upload(file.getBytes(),
+                ObjectUtils.asMap("resource_type", "auto", "public_id", publicId));
+        return (String) uploadResult.get("secure_url");
+    }
+
+    public String uploadImage(MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String publicId = UUID.randomUUID().toString() + extension;
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> uploadResult = (Map<String, Object>) cloudinary.uploader().upload(file.getBytes(),
+                ObjectUtils.asMap("resource_type", "image", "public_id", publicId));
+        return (String) uploadResult.get("secure_url");
+    }
+
+    public String uploadRawFile(MultipartFile file) throws IOException {
+        String originalFilename = file.getOriginalFilename();
+        String extension = "";
+        if (originalFilename != null && originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        }
+        String publicId = UUID.randomUUID().toString() + extension;
+        
+        @SuppressWarnings("unchecked")
+        Map<String, Object> uploadResult = (Map<String, Object>) cloudinary.uploader().upload(file.getBytes(),
                 ObjectUtils.asMap("resource_type", "raw", "public_id", publicId));
         return (String) uploadResult.get("secure_url");
     }

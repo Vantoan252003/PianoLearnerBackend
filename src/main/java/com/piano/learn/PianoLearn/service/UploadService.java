@@ -15,6 +15,10 @@ public class UploadService {
     private CloudinaryService cloudinaryService;
 
     public String uploadAvatar(MultipartFile file) throws IOException {
-        return cloudinaryService.uploadFile(file);
+        return cloudinaryService.uploadImage(file);
+    }
+
+    public String uploadSong(MultipartFile file) throws IOException {
+        return cloudinaryService.uploadRawFile(file);
     }
 }

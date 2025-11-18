@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.piano.learn.PianoLearn.entity.song.Song;
+import com.piano.learn.PianoLearn.service.UploadService;
 import com.piano.learn.PianoLearn.service.admin.SongService;
-import com.piano.learn.PianoLearn.service.common.CloudinaryService;
 
 @RestController
 @RequestMapping("/api/admin/songs")
@@ -26,7 +26,7 @@ public class AdminSongController {
     private SongService songService;
     
     @Autowired
-    private CloudinaryService cloudinaryService;
+    private UploadService uploadService;
     
     @GetMapping
     public ResponseEntity<List<Song>> getAllSongs() {
@@ -62,12 +62,12 @@ public class AdminSongController {
                 .build();
         
         if (midiFile != null && !midiFile.isEmpty()) {
-            String midiUrl = cloudinaryService.uploadFile(midiFile);
+            String midiUrl = uploadService.uploadSong(midiFile);
             song.setMidiFileUrl(midiUrl);
         }
         
         if (sheetMusicFile != null && !sheetMusicFile.isEmpty()) {
-            String sheetUrl = cloudinaryService.uploadFile(sheetMusicFile);
+            String sheetUrl = uploadService.uploadSong(sheetMusicFile);
             song.setSheetMusicUrl(sheetUrl);
         }
         
@@ -102,12 +102,12 @@ public class AdminSongController {
         existingSong.setAudioUrl(audioUrl);
         
         if (midiFile != null && !midiFile.isEmpty()) {
-            String midiUrl = cloudinaryService.uploadFile(midiFile);
+            String midiUrl = uploadService.uploadSong(midiFile);
             existingSong.setMidiFileUrl(midiUrl);
         }
         
         if (sheetMusicFile != null && !sheetMusicFile.isEmpty()) {
-            String sheetUrl = cloudinaryService.uploadFile(sheetMusicFile);
+            String sheetUrl = uploadService.uploadSong(sheetMusicFile);
             existingSong.setSheetMusicUrl(sheetUrl);
         }
         

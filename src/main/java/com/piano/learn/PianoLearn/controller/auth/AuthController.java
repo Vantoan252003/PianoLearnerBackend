@@ -1,5 +1,6 @@
 package com.piano.learn.PianoLearn.controller.auth;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.piano.learn.PianoLearn.dto.auth.ChangePasswordRequest;
 import com.piano.learn.PianoLearn.dto.auth.LoginRequest;
 import com.piano.learn.PianoLearn.dto.auth.LoginResponse;
 import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
@@ -226,6 +228,166 @@ public class AuthController {
                 email,
                 null,
                 avatarUrl,
+                passwordEncoder
+            );
+
+            UserDetailResponse userDetailResponse = userService.getUserDetailInfo(updatedUser.getUserId());
+
+            return ResponseEntity.ok(userDetailResponse);
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(fe -> errors.put(fe.getField(), fe.getDefaultMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userService.findUserByEmail(userDetails.getUsername());
+            if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Mật khẩu hiện tại không đúng");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            if (request.getCurrentPassword().equals(request.getNewPassword())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Mật khẩu mới không được trùng mật khẩu hiện tại");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Mật khẩu mới và xác nhận mật khẩu không khớp");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            userService.updateUser(user.getUserId(), null, null, request.getNewPassword(), null, passwordEncoder);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Đổi mật khẩu thành công");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PostMapping("/upload-avatar")
+    public ResponseEntity<?> uploadAvatar(@RequestParam("avatar") MultipartFile avatar) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            if (avatar == null || avatar.isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Avatar file is required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            // Validate file type
+            String contentType = avatar.getContentType();
+            if (contentType == null || !contentType.startsWith("image/")) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Only image files are allowed");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            // Validate file size (max 5MB)
+            if (avatar.getSize() > 5 * 1024 * 1024) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Dung lượng ảnh quá lớn!");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            String avatarUrl = uploadService.uploadAvatar(avatar);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("avatarUrl", avatarUrl);
+            response.put("message", "Cập nhật avatar thành công!");
+            return ResponseEntity.ok(response);
+
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (IOException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Failed to upload avatar");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PutMapping("/update-user-info")
+    public ResponseEntity<?> updateUserInfo(@RequestParam("fullName") String fullName, @RequestParam("email") String email) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userService.findUserByEmail(userDetails.getUsername());
+
+            // Basic validation
+            if (fullName != null && fullName.trim().isEmpty()) {
+                throw new RuntimeException("Full name cannot be empty");
+            }
+            if (fullName != null && fullName.length() > 100) {
+                throw new RuntimeException("Full name must not exceed 100 characters");
+            }
+            if (email != null && (email.trim().isEmpty() || !email.contains("@"))) {
+                throw new RuntimeException("Invalid email format");
+            }
+            if (email != null && email.length() > 100) {
+                throw new RuntimeException("Email must not exceed 100 characters");
+            }
+
+            // Check if email is already taken by another user
+            if (email != null && !email.equals(user.getEmail()) && userService.checkEmailExists(email)) {
+                throw new RuntimeException("Email is already taken by another user");
+            }
+
+            // Update user information (only email and fullname, no avatar)
+            User updatedUser = userService.updateUser(
+                user.getUserId(),
+                fullName,
+                email,
+                null, // no password change
+                null, // no avatar change
                 passwordEncoder
             );
 
