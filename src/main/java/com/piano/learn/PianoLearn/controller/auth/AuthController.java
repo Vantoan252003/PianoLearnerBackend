@@ -328,6 +328,11 @@ public class AuthController {
 
             String avatarUrl = uploadService.uploadAvatar(avatar);
 
+            // Update user's avatar URL
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userService.findUserByEmail(userDetails.getUsername());
+            userService.updateUser(user.getUserId(), null, null, null, avatarUrl, passwordEncoder);
+
             Map<String, String> response = new HashMap<>();
             response.put("avatarUrl", avatarUrl);
             response.put("message", "Cập nhật avatar thành công!");
