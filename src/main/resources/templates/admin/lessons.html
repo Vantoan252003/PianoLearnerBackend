@@ -31,8 +31,9 @@
                                 <th>Tiêu đề</th>
                                 <th>Khóa học</th>
                                 <th>Thứ tự</th>
-                                <th>Thời lượng (phút)</th>
+                                <th>EXP yêu cầu</th>
                                 <th>EXP thưởng</th>
+                                <th>Thời lượng (phút)</th>
                                 <th>Ngày tạo</th>
                                 <th>Thao tác</th>
                             </tr>
@@ -91,16 +92,23 @@
                             </div>
                         </div>
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label">Thời lượng (phút)</label>
                                     <input type="number" class="form-control" id="durationMinutes">
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="mb-3">
-                                    <label class="form-label">EXP thưởng</label>
-                                    <input type="number" class="form-control" id="expReward" value="10">
+                                    <label class="form-label">EXP yêu cầu 🔒</label>
+                                    <input type="number" class="form-control" id="expRequire" value="0" min="0">
+                                    <small class="text-muted">0 = Mở sẵn cho tất cả</small>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label">EXP thưởng ⭐</label>
+                                    <input type="number" class="form-control" id="expReward" value="10" min="0">
                                 </div>
                             </div>
                         </div>
@@ -161,13 +169,23 @@
             tbody.innerHTML = '';
             data.forEach(item => {
                 const tr = document.createElement('tr');
+                
+                // Badge cho EXP requirement
+                let expRequireBadge = '<span class="badge bg-success" title="Mở sẵn"><i class="bi bi-unlock"></i> 0</span>';
+                if (item.expRequire && item.expRequire > 0) {
+                    expRequireBadge = `<span class="badge bg-warning text-dark" title="Yêu cầu ${item.expRequire} EXP">
+                        <i class="bi bi-lock"></i> ${item.expRequire}
+                    </span>`;
+                }
+                
                 tr.innerHTML = `
                     <td>${item.lessonId}</td>
                     <td>${item.lessonTitle}</td>
                     <td>${item.course ? item.course.courseName : '-'}</td>
                     <td><span class="badge bg-secondary">${item.lessonOrder}</span></td>
+                    <td>${expRequireBadge}</td>
+                    <td><span class="badge bg-primary">${item.expReward || 10}</span></td>
                     <td>${item.durationMinutes || '-'}</td>
-                    <td>${item.expReward || 10}</td>
                     <td>${item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="editData(${item.lessonId})"><i class="bi bi-pencil"></i></button>
@@ -202,6 +220,7 @@
                 document.getElementById('videoUrl').value = data.videoUrl || '';
                 document.getElementById('sheetMusicUrl').value = data.sheetMusicUrl || '';
                 document.getElementById('durationMinutes').value = data.durationMinutes || '';
+                document.getElementById('expRequire').value = data.expRequire || 0;
                 document.getElementById('expReward').value = data.expReward || 10;
                 new bootstrap.Modal(document.getElementById('dataModal')).show();
             } catch (error) {
@@ -226,6 +245,7 @@
                 videoUrl: document.getElementById('videoUrl').value,
                 sheetMusicUrl: document.getElementById('sheetMusicUrl').value,
                 durationMinutes: parseInt(document.getElementById('durationMinutes').value) || null,
+                expRequire: parseInt(document.getElementById('expRequire').value) || 0,
                 expReward: parseInt(document.getElementById('expReward').value) || 10
             };
 

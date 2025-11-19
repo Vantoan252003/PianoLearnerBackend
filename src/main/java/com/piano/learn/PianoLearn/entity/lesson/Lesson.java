@@ -59,6 +59,10 @@ public class Lesson {
     @Builder.Default
     private Integer expReward = 10;
     
+    @Column(name = "exp_require")
+    @Builder.Default
+    private Integer expRequire = 0;
+    
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     

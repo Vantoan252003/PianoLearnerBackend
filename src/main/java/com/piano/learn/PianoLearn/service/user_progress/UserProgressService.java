@@ -12,7 +12,9 @@ import com.piano.learn.PianoLearn.dto.progress.UserProgressResponse;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 import com.piano.learn.PianoLearn.entity.progress.UserProgress;
+import com.piano.learn.PianoLearn.repository.lesson.LessonRepository;
 import com.piano.learn.PianoLearn.repository.progress.UserProgressRepository;
+import com.piano.learn.PianoLearn.service.UserService;
 import com.piano.learn.PianoLearn.service.achievement.AchievementUnlockService;
 
 @Service("learnerUserProgressService")
@@ -23,6 +25,12 @@ public class UserProgressService {
 
     @Autowired
     private AchievementUnlockService achievementUnlockService;
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private LessonRepository lessonRepository;
 
     public UserProgressResponse saveOrUpdateProgress(Integer userId, UpdateUserProgressRequest request) {
         Optional<UserProgress> existingProgress = userProgressRepository.findByUser_UserIdAndLesson_LessonId(
@@ -60,6 +68,24 @@ public class UserProgressService {
 
         progress.setLastAccessed(LocalDateTime.now());
         UserProgress savedProgress = userProgressRepository.save(progress);
+        
+        boolean isFirstCompletion = false;
+        if (savedProgress.getIsCompleted()) {
+            if (existingProgress.isPresent()) {
+                // Nếu đã có progress trước đó và trước đó chưa hoàn thành
+                isFirstCompletion = !existingProgress.get().getIsCompleted();
+            } else {
+
+                isFirstCompletion = true;
+            }
+            
+            if (isFirstCompletion) {
+                Lesson lesson = lessonRepository.findById(request.getLessonId()).orElse(null);
+                if (lesson != null && lesson.getExpReward() != null) {
+                    userService.addExp(userId, lesson.getExpReward());
+                }
+            }
+        }
 
         // Check for achievements if lesson completed
         if (savedProgress.getIsCompleted()) {
