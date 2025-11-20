@@ -21,6 +21,7 @@ public class SongRatingDTO {
     private String username;
     private String userEmail;
     private Integer songId;
+    private String avatarUrl;
     private String songTitle;
     private Double rating;
     private String comment;

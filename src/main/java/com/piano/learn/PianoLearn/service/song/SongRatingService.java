@@ -16,7 +16,6 @@ import com.piano.learn.PianoLearn.entity.song.Song;
 import com.piano.learn.PianoLearn.entity.song.SongRating;
 import com.piano.learn.PianoLearn.repository.song.SongRatingRepository;
 import com.piano.learn.PianoLearn.repository.song.SongRepository;
-import com.piano.learn.PianoLearn.service.UserService;
 
 @Service
 public class SongRatingService {
@@ -120,6 +119,7 @@ public class SongRatingService {
                 .userId(user.getUserId())
                 .username(user.getFullName())
                 .userEmail(user.getEmail())
+                .avatarUrl(user.getAvatarUrl())
                 .songId(rating.getSong().getSongId())
                 .songTitle(rating.getSong().getSongTitle())
                 .rating(rating.getRating())

@@ -1,18 +1,29 @@
 package com.piano.learn.PianoLearn.service.admin;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.favorite.Favorite;
+import com.piano.learn.PianoLearn.entity.song.Song;
+import com.piano.learn.PianoLearn.repository.auth.UserRepository;
 import com.piano.learn.PianoLearn.repository.favorite.FavoriteRepository;
+import com.piano.learn.PianoLearn.repository.song.SongRepository;
 
 @Service
 public class FavoriteService {
     
     @Autowired
     private FavoriteRepository favoriteRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private SongRepository songRepository;
     
     public List<Favorite> getAllFavorites() {
         return favoriteRepository.findAll();
@@ -37,6 +48,67 @@ public class FavoriteService {
     public boolean deleteFavorite(Integer id) {
         if (favoriteRepository.existsById(id)) {
             favoriteRepository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+    
+    public List<Favorite> getFavoritesByUserId(Integer userId) {
+        return favoriteRepository.findByUser_UserId(userId);
+    }
+    
+    // Add favorite for a song
+    public void addFavoriteSong(Integer userId, Integer songId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        Song song = songRepository.findById(songId).orElseThrow(() -> new RuntimeException("Song not found"));
+        
+        // Check if already favorited
+        Optional<Favorite> existing = favoriteRepository.findByUser_UserIdAndSong_SongId(userId, songId);
+        
+        if (existing.isEmpty()) {
+            Favorite favorite = Favorite.builder()
+                .user(user)
+                .song(song)
+                .sheetId(null)
+                .build();
+            favoriteRepository.save(favorite);
+        }
+    }
+    
+    // Add favorite for a sheet music
+    public void addFavoriteSheet(Integer userId, Integer sheetId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Check if already favorited
+        Optional<Favorite> existing = favoriteRepository.findByUser_UserIdAndSheetId(userId, sheetId);
+        
+        if (existing.isEmpty()) {
+            Favorite favorite = Favorite.builder()
+                .user(user)
+                .song(null)
+                .sheetId(sheetId)
+                .build();
+            favoriteRepository.save(favorite);
+        }
+    }
+    
+    // Remove favorite by song
+    public boolean removeFavoriteSong(Integer userId, Integer songId) {
+        Optional<Favorite> favorite = favoriteRepository.findByUser_UserIdAndSong_SongId(userId, songId);
+        
+        if (favorite.isPresent()) {
+            favoriteRepository.delete(favorite.get());
+            return true;
+        }
+        return false;
+    }
+    
+    // Remove favorite by sheet
+    public boolean removeFavoriteSheet(Integer userId, Integer sheetId) {
+        Optional<Favorite> favorite = favoriteRepository.findByUser_UserIdAndSheetId(userId, sheetId);
+        
+        if (favorite.isPresent()) {
+            favoriteRepository.delete(favorite.get());
             return true;
         }
         return false;

@@ -112,4 +112,9 @@ public class AdminViewController {
     public String showSystemSettings() {
         return "admin/system_settings";
     }
+
+    @GetMapping("/sheet-music")
+    public String showSheetMusic() {
+        return "admin/sheet_music";
+    }
 }

@@ -21,9 +21,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "favorites", uniqueConstraints = {
-    @UniqueConstraint(columnNames = {"user_id", "song_id"})
-})
+@Table(name = "favorites")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -40,8 +38,11 @@ public class Favorite {
     private User user;
     
     @ManyToOne
-    @JoinColumn(name = "song_id", nullable = false)
+    @JoinColumn(name = "song_id", nullable = true)
     private Song song;
+    
+    @Column(name = "sheet_id", nullable = true)
+    private Integer sheetId;
     
     @Column(name = "added_at")
     private LocalDateTime addedAt;
