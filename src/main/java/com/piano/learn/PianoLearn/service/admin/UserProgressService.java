@@ -15,7 +15,7 @@ public class UserProgressService {
     private UserProgressRepository userProgressRepository;
     
     public List<UserProgress> getAllUserProgress() {
-        return userProgressRepository.findAll();
+        return userProgressRepository.findAllWithUserAndLesson();
     }
     
     public UserProgress getUserProgressById(Integer id) {
@@ -40,5 +40,9 @@ public class UserProgressService {
             return true;
         }
         return false;
+    }
+    
+    public List<UserProgress> getUserProgressByUserId(Integer userId) {
+        return userProgressRepository.findByUser_UserId(userId);
     }
 }

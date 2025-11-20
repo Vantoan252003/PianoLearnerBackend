@@ -33,6 +33,7 @@
                                 <th>Độ khó</th>
                                 <th>Thời lượng (s)</th>
                                 <th>Điểm phổ biến</th>
+                                <th>Rating</th>
                                 <th>Ngày tạo</th>
                                 <th>Thumbnail</th>
                                 <th>MIDI File</th>
@@ -174,6 +175,7 @@
                     <td><span class="badge bg-success">${item.difficultyLevel || '-'}</span></td>
                     <td>${item.durationSeconds || '-'}</td>
                     <td>${item.popularityScore || 0}</td>
+                    <td><span class="badge bg-info">${item.rating || 0.0} ⭐</span></td>
                     <td>${item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
                     <td>${item.thumbnailUrl ? `<a href="${item.thumbnailUrl}" target="_blank">View</a>` : '-'}</td>
                     <td>${item.midiFileUrl ? `<a href="${item.midiFileUrl}" target="_blank">Download</a>` : '-'}</td>

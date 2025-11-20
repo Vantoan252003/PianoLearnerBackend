@@ -3,12 +3,30 @@
 <body>
 <th:block th:fragment="sidebar(active)">
     <div class="list-group">
+        <!-- Dashboard & Analytics -->
+        <a href="/admin/analytics" class="list-group-item list-group-item-action" th:classappend="${active}=='analytics' ? ' active' : ''">
+            <i class="bi bi-bar-chart-line"></i> Analytics Dashboard
+        </a>
+        
+        <!-- Separator -->
+        <div class="list-group-item bg-light"><small class="text-muted fw-bold">QUẢN LÝ CHÍNH</small></div>
+        
         <a href="/admin/users" class="list-group-item list-group-item-action" th:classappend="${active}=='users' ? ' active' : ''"><i class="bi bi-people"></i> Người dùng</a>
+        <a href="/admin/user-details" class="list-group-item list-group-item-action" th:classappend="${active}=='user_details' ? ' active' : ''"><i class="bi bi-person-badge"></i> Chi tiết User</a>
         <a href="/admin/courses" class="list-group-item list-group-item-action" th:classappend="${active}=='courses' ? ' active' : ''"><i class="bi bi-book"></i> Khóa học</a>
         <a href="/admin/lessons" class="list-group-item list-group-item-action" th:classappend="${active}=='lessons' ? ' active' : ''"><i class="bi bi-journal-text"></i> Bài học</a>
         <a href="/admin/exercises" class="list-group-item list-group-item-action" th:classappend="${active}=='exercises' ? ' active' : ''"><i class="bi bi-pencil-square"></i> Bài tập</a>
         <a href="/admin/piano-questions" class="list-group-item list-group-item-action" th:classappend="${active}=='piano-questions' ? ' active' : ''"><i class="bi bi-question-circle"></i> Câu hỏi Piano</a>
+        
+        <!-- Separator -->
+        <div class="list-group-item bg-light"><small class="text-muted fw-bold">BÀI HÁT & ĐÁNH GIÁ</small></div>
+        
         <a href="/admin/songs" class="list-group-item list-group-item-action" th:classappend="${active}=='songs' ? ' active' : ''"><i class="bi bi-music-note-list"></i> Bài hát</a>
+        <a href="/admin/song-ratings" class="list-group-item list-group-item-action" th:classappend="${active}=='song_ratings' ? ' active' : ''"><i class="bi bi-star-fill"></i> Đánh giá Bài hát</a>
+        
+        <!-- Separator -->
+        <div class="list-group-item bg-light"><small class="text-muted fw-bold">TIẾN ĐỘ & THÀNH TÍCH</small></div>
+        
         <a href="/admin/achievements" class="list-group-item list-group-item-action" th:classappend="${active}=='achievements' ? ' active' : ''"><i class="bi bi-trophy"></i> Thành tích</a>
         <a href="/admin/user-progress" class="list-group-item list-group-item-action" th:classappend="${active}=='user-progress' ? ' active' : ''"><i class="bi bi-graph-up"></i> Tiến độ học</a>
         <a href="/admin/exercise-results" class="list-group-item list-group-item-action" th:classappend="${active}=='exercise-results' ? ' active' : ''"><i class="bi bi-check2-square"></i> Kết quả BT</a>
@@ -16,6 +34,13 @@
         <a href="/admin/practice-sessions" class="list-group-item list-group-item-action" th:classappend="${active}=='practice-sessions' ? ' active' : ''"><i class="bi bi-clock-history"></i> Lịch sử LT</a>
         <a href="/admin/daily-goals" class="list-group-item list-group-item-action" th:classappend="${active}=='daily-goals' ? ' active' : ''"><i class="bi bi-target"></i> Mục tiêu</a>
         <a href="/admin/favorites" class="list-group-item list-group-item-action" th:classappend="${active}=='favorites' ? ' active' : ''"><i class="bi bi-heart"></i> Yêu thích</a>
+        
+        <!-- Separator -->
+        <div class="list-group-item bg-light"><small class="text-muted fw-bold">CÔNG CỤ NÂNG CAO</small></div>
+        
+        <a href="/admin/course-management" class="list-group-item list-group-item-action" th:classappend="${active}=='course-management' ? ' active' : ''"><i class="bi bi-diagram-3"></i> Quản lý Cấu trúc</a>
+        <a href="/admin/leaderboard" class="list-group-item list-group-item-action" th:classappend="${active}=='leaderboard' ? ' active' : ''"><i class="bi bi-trophy-fill"></i> Bảng Xếp Hạng</a>
+        <a href="/admin/system-settings" class="list-group-item list-group-item-action" th:classappend="${active}=='system-settings' ? ' active' : ''"><i class="bi bi-gear-fill"></i> Cài Đặt Hệ Thống</a>
     </div>
 </th:block>
 </body>

@@ -77,9 +77,39 @@ public class AdminViewController {
     public String showFavorites() {
         return "admin/favorites";
     }
-
+    
+    @GetMapping("/song-ratings")
+    public String showSongRatings() {
+        return "admin/song_ratings";
+    }
+    
+    @GetMapping("/user-details")
+    public String showUserDetails() {
+        return "admin/user_details";
+    }
+    
+    @GetMapping("/analytics")
+    public String showAnalytics() {
+        return "admin/analytics";
+    }
+    
     @GetMapping("/piano-questions")
     public String showPianoQuestions() {
         return "admin/piano_question";
+    }
+    
+    @GetMapping("/course-management")
+    public String showCourseManagement() {
+        return "admin/course_management";
+    }
+    
+    @GetMapping("/leaderboard")
+    public String showLeaderboard() {
+        return "admin/leaderboard";
+    }
+    
+    @GetMapping("/system-settings")
+    public String showSystemSettings() {
+        return "admin/system_settings";
     }
 }

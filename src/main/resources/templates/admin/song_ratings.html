@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Đánh giá - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .song-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .song-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .rating-item {
+            border-left: 4px solid #0d6efd;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('song_ratings')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-star-fill text-warning"></i> Quản lý Đánh giá Bài hát</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="recalculateRatings()">
+                            <i class="bi bi-arrow-clockwise"></i> Cập nhật Rating
+                        </button>
+                        <input type="text" class="form-control" id="searchSong" placeholder="🔍 Tìm bài hát..." style="width: 300px;">
+                    </div>
+                </div>
+
+                <!-- Song List -->
+                <div class="row" id="songList">
+                    <!-- Songs will be loaded here -->
+                </div>
+
+                <!-- Ratings Detail Modal -->
+                <div class="modal fade" id="ratingsModal" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div>
+                                    <h5 class="modal-title" id="modalSongTitle">Đánh giá bài hát</h5>
+                                    <p class="mb-0 text-muted">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <span id="modalAvgRating">0.0</span> 
+                                        (<span id="modalTotalRatings">0</span> đánh giá)
+                                    </p>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <canvas id="ratingChart" width="300" height="200"></canvas>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Thống kê:</h6>
+                                        <ul class="list-unstyled">
+                                            <li>⭐⭐⭐⭐⭐ 5 sao: <span id="star5">0</span></li>
+                                            <li>⭐⭐⭐⭐ 4 sao: <span id="star4">0</span></li>
+                                            <li>⭐⭐⭐ 3 sao: <span id="star3">0</span></li>
+                                            <li>⭐⭐ 2 sao: <span id="star2">0</span></li>
+                                            <li>⭐ 1 sao: <span id="star1">0</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <hr>
+                                <h6>Danh sách đánh giá:</h6>
+                                <div id="ratingsList">
+                                    <!-- Ratings will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const token = localStorage.getItem('adminToken');
+        let allSongs = [];
+        let currentChart = null;
+
+        if (!token) window.location.href = '/admin/login';
+
+        // Load all songs
+        async function loadSongs() {
+            try {
+                const response = await fetch('/api/admin/songs', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                allSongs = await response.json();
+                renderSongs(allSongs);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        function renderSongs(songs) {
+            const songList = document.getElementById('songList');
+            songList.innerHTML = '';
+            
+            if (songs.length === 0) {
+                songList.innerHTML = '<div class="col-12"><p class="text-center text-muted">Không tìm thấy bài hát nào</p></div>';
+                return;
+            }
+
+            songs.forEach(song => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-4';
+                col.innerHTML = `
+                    <div class="card song-card h-100" onclick="viewRatings(${song.songId}, '${song.songTitle.replace(/'/g, "\\'")}')">
+                        <div class="card-body">
+                            <h5 class="card-title">${song.songTitle}</h5>
+                            <p class="card-text text-muted">${song.artist || 'Unknown Artist'}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <strong>${(song.rating || 0).toFixed(1)}</strong>
+                                </div>
+                                <span class="badge bg-info">${song.difficultyLevel || 'N/A'}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                songList.appendChild(col);
+            });
+        }
+
+        // Search songs
+        document.getElementById('searchSong').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allSongs.filter(song => 
+                song.songTitle.toLowerCase().includes(searchTerm) ||
+                (song.artist && song.artist.toLowerCase().includes(searchTerm))
+            );
+            renderSongs(filtered);
+        });
+
+        // View ratings for a song
+        async function viewRatings(songId, songTitle) {
+            try {
+                const response = await fetch(`/api/admin/song-ratings/song/${songId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const ratings = await response.json();
+                
+                document.getElementById('modalSongTitle').textContent = songTitle;
+                
+                // Calculate statistics
+                const totalRatings = ratings.length;
+                const avgRating = totalRatings > 0 
+                    ? (ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings).toFixed(1) 
+                    : 0.0;
+                
+                document.getElementById('modalAvgRating').textContent = avgRating;
+                document.getElementById('modalTotalRatings').textContent = totalRatings;
+                
+                // Count stars
+                const starCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+                ratings.forEach(r => {
+                    const star = Math.floor(r.rating);
+                    if (star >= 1 && star <= 5) {
+                        starCounts[star]++;
+                    }
+                });
+                
+                document.getElementById('star5').textContent = starCounts[5];
+                document.getElementById('star4').textContent = starCounts[4];
+                document.getElementById('star3').textContent = starCounts[3];
+                document.getElementById('star2').textContent = starCounts[2];
+                document.getElementById('star1').textContent = starCounts[1];
+                
+                // Render chart
+                renderRatingChart(starCounts);
+                
+                // Render ratings list
+                renderRatingsList(ratings, songId);
+                
+                new bootstrap.Modal(document.getElementById('ratingsModal')).show();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải đánh giá!');
+            }
+        }
+
+        function renderRatingChart(starCounts) {
+            const ctx = document.getElementById('ratingChart').getContext('2d');
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1⭐', '2⭐', '3⭐', '4⭐', '5⭐'],
+                    datasets: [{
+                        label: 'Số lượng đánh giá',
+                        data: [starCounts[1], starCounts[2], starCounts[3], starCounts[4], starCounts[5]],
+                        backgroundColor: [
+                            'rgba(220, 53, 69, 0.7)',
+                            'rgba(253, 126, 20, 0.7)',
+                            'rgba(255, 193, 7, 0.7)',
+                            'rgba(13, 202, 240, 0.7)',
+                            'rgba(25, 135, 84, 0.7)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+        }
+
+        function renderRatingsList(ratings, songId) {
+            const ratingsList = document.getElementById('ratingsList');
+            ratingsList.innerHTML = '';
+            
+            if (ratings.length === 0) {
+                ratingsList.innerHTML = '<p class="text-center text-muted">Chưa có đánh giá nào</p>';
+                return;
+            }
+            
+            ratings.forEach(rating => {
+                const div = document.createElement('div');
+                div.className = 'rating-item';
+                const initials = rating.username.split(' ').map(w => w[0]).join('').toUpperCase();
+                div.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex">
+                            <div class="user-avatar me-3">${initials}</div>
+                            <div>
+                                <h6 class="mb-1">${rating.username}</h6>
+                                <small class="text-muted">${rating.userEmail}</small>
+                                <div class="mt-2">
+                                    <span class="badge bg-warning text-dark">${rating.rating} ⭐</span>
+                                    <small class="text-muted ms-2">${new Date(rating.createdAt).toLocaleString('vi-VN')}</small>
+                                </div>
+                                <p class="mt-2 mb-0">${rating.comment || '<em class="text-muted">Không có nhận xét</em>'}</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRating(${rating.songRatingId}, ${songId}, '${rating.songTitle.replace(/'/g, "\\'")}')">
+                            <i class="bi bi-trash"></i> Xóa
+                        </button>
+                    </div>
+                `;
+                ratingsList.appendChild(div);
+            });
+        }
+
+        async function deleteRating(ratingId, songId, songTitle) {
+            if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/song-ratings/${ratingId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    alert('Xóa thành công!');
+                    // Reload ratings
+                    bootstrap.Modal.getInstance(document.getElementById('ratingsModal')).hide();
+                    setTimeout(() => viewRatings(songId, songTitle), 300);
+                    loadSongs(); // Refresh song ratings
+                } else {
+                    alert('Lỗi khi xóa đánh giá!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi xóa đánh giá!');
+            }
+        }
+
+        async function recalculateRatings() {
+            if (!confirm('Bạn có chắc muốn cập nhật lại rating cho tất cả bài hát?')) return;
+            
+            try {
+                const response = await fetch('/api/admin/song-ratings/recalculate-all', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const message = await response.text();
+                    alert('✅ ' + message);
+                    loadSongs(); // Reload songs to see updated ratings
+                } else {
+                    alert('Lỗi khi cập nhật rating!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi cập nhật rating!');
+            }
+        }
+
+        loadSongs();
+    </script>
+</body>
+</html>

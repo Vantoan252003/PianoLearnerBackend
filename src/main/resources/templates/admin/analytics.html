@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            padding: 25px;
+            color: white;
+            height: 100%;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-10px);
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('analytics')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <h2 class="mb-4"><i class="bi bi-bar-chart-line"></i> Analytics Dashboard</h2>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <h1 id="totalUsers">0</h1>
+                            <p class="mb-0"><i class="bi bi-people"></i> Tổng số Users</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <h1 id="totalCourses">0</h1>
+                            <p class="mb-0"><i class="bi bi-book"></i> Tổng số Courses</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <h1 id="totalLessons">0</h1>
+                            <p class="mb-0"><i class="bi bi-journal-text"></i> Tổng số Lessons</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <h1 id="totalSongs">0</h1>
+                            <p class="mb-0"><i class="bi bi-music-note-beamed"></i> Tổng số Songs</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 1 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-graph-up"></i> User Growth</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="userGrowthChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-pie-chart"></i> Lesson Completion Rate</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="completionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Row 2 -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-star"></i> Top Rated Songs</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="topSongsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-trophy"></i> User Levels Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="levelDistributionChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5><i class="bi bi-activity"></i> Hoạt động gần đây</h5>
+                            </div>
+                            <div class="card-body">
+                                <div id="recentActivity"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const token = localStorage.getItem('adminToken');
+
+        if (!token) window.location.href = '/admin/login';
+
+        async function loadAnalytics() {
+            try {
+                // Load all data
+                const [users, courses, lessons, songs, progress] = await Promise.all([
+                    fetch('/api/admin/users', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+                    fetch('/api/admin/courses', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+                    fetch('/api/admin/lessons', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+                    fetch('/api/admin/songs', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+                    fetch('/api/admin/user-progress', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+                ]);
+
+                // Update stats
+                document.getElementById('totalUsers').textContent = users.length;
+                document.getElementById('totalCourses').textContent = courses.length;
+                document.getElementById('totalLessons').textContent = lessons.length;
+                document.getElementById('totalSongs').textContent = songs.length;
+
+                // User Growth Chart (last 7 days)
+                renderUserGrowthChart(users);
+
+                // Completion Chart
+                renderCompletionChart(progress);
+
+                // Top Songs Chart
+                renderTopSongsChart(songs);
+
+                // Level Distribution Chart
+                renderLevelDistributionChart(users);
+
+                // Recent Activity
+                renderRecentActivity(progress);
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải analytics!');
+            }
+        }
+
+        function renderUserGrowthChart(users) {
+            const ctx = document.getElementById('userGrowthChart').getContext('2d');
+            
+            // Group users by date (last 30 days)
+            const last30Days = [];
+            const counts = [];
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toLocaleDateString('vi-VN');
+                last30Days.push(dateStr);
+                
+                const count = users.filter(u => {
+                    const userDate = new Date(u.createdAt);
+                    return userDate.toLocaleDateString('vi-VN') === dateStr;
+                }).length;
+                counts.push(count);
+            }
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: last30Days,
+                    datasets: [{
+                        label: 'Số user mới',
+                        data: counts,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderCompletionChart(progress) {
+            const ctx = document.getElementById('completionChart').getContext('2d');
+            
+            const completed = progress.filter(p => p.isCompleted).length;
+            const inProgress = progress.length - completed;
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Hoàn thành', 'Đang học'],
+                    datasets: [{
+                        data: [completed, inProgress],
+                        backgroundColor: ['#43e97b', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom' }
+                    }
+                }
+            });
+        }
+
+        function renderTopSongsChart(songs) {
+            const ctx = document.getElementById('topSongsChart').getContext('2d');
+            
+            // Sort by rating
+            const topSongs = songs
+                .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+                .slice(0, 5);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: topSongs.map(s => s.songTitle),
+                    datasets: [{
+                        label: 'Rating',
+                        data: topSongs.map(s => s.rating || 0),
+                        backgroundColor: '#ffc107'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: { beginAtZero: true, max: 5 }
+                    }
+                }
+            });
+        }
+
+        function renderLevelDistributionChart(users) {
+            const ctx = document.getElementById('levelDistributionChart').getContext('2d');
+            
+            // Count by level
+            const levelCounts = {};
+            users.forEach(u => {
+                const level = u.levelName || 'Beginner';
+                levelCounts[level] = (levelCounts[level] || 0) + 1;
+            });
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(levelCounts),
+                    datasets: [{
+                        data: Object.values(levelCounts),
+                        backgroundColor: ['#667eea', '#f093fb', '#4facfe', '#43e97b', '#ffc107']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        function renderRecentActivity(progress) {
+            const recentDiv = document.getElementById('recentActivity');
+            
+            // Sort by last accessed
+            const recent = progress
+                .sort((a, b) => new Date(b.lastAccessed) - new Date(a.lastAccessed))
+                .slice(0, 10);
+
+            if (recent.length === 0) {
+                recentDiv.innerHTML = '<p class="text-muted">Chưa có hoạt động</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'table table-hover';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Người dùng</th>
+                        <th>Bài học</th>
+                        <th>Tiến độ</th>
+                        <th>Thời gian</th>
+                        <th>Trạng thái</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${recent.map(p => `
+                        <tr>
+                            <td>
+                                <strong>${p.user?.fullName || 'User #' + p.userId}</strong>
+                                <br><small class="text-muted">${p.user?.email || ''}</small>
+                            </td>
+                            <td>
+                                <strong>${p.lesson?.lessonTitle || 'Lesson #' + p.lessonId}</strong>
+                                <br><small class="text-muted">Khóa: ${p.lesson?.course?.courseName || 'N/A'}</small>
+                            </td>
+                            <td>
+                                <div class="progress" style="width: 100px;">
+                                    <div class="progress-bar" style="width: ${p.completionPercentage}%">
+                                        ${p.completionPercentage}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td><small>${new Date(p.lastAccessed).toLocaleString('vi-VN')}</small></td>
+                            <td>
+                                <span class="badge ${p.isCompleted ? 'bg-success' : 'bg-warning'}">
+                                    ${p.isCompleted ? 'Hoàn thành' : 'Đang học'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            `;
+            recentDiv.appendChild(table);
+        }
+
+        loadAnalytics();
+    </script>
+</body>
+</html>

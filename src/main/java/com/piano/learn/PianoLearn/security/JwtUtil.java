@@ -18,7 +18,7 @@ import io.jsonwebtoken.security.Keys;
 @Component
 public class JwtUtil {
     private static final String SECRET_KEY = "weather_api_secret_key_very_secure_and_long_enough";
-    private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60; // 5 hours
+    private static final long JWT_TOKEN_VALIDITY = 600 * 60 * 60; // 5 hours
 
     private Key getSigningKey() {
         byte[] keyBytes = SECRET_KEY.getBytes();

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cài Đặt Hệ Thống - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .settings-card {
+            border-left: 4px solid;
+            transition: all 0.3s;
+        }
+        .settings-card:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transform: translateY(-5px);
+        }
+        .settings-card.exp-settings { border-color: #ffd700; }
+        .settings-card.difficulty-settings { border-color: #ff6b6b; }
+        .settings-card.system-settings { border-color: #4ecdc4; }
+        .settings-card.notification-settings { border-color: #95e1d3; }
+        .slider-container {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .preview-box {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: 0.4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #2196F3;
+        }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('system-settings')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <h2 class="mb-4"><i class="bi bi-gear-fill"></i> Cài Đặt Hệ Thống</h2>
+
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> Thay đổi các thiết lập này sẽ ảnh hưởng đến toàn bộ hệ thống. Hãy cẩn thận!
+                </div>
+
+                <!-- EXP Settings -->
+                <div class="card settings-card exp-settings mb-4">
+                    <div class="card-header bg-warning bg-opacity-10">
+                        <h5 class="mb-0"><i class="bi bi-star-fill text-warning"></i> Cài Đặt EXP</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="slider-container">
+                                    <label class="form-label">
+                                        <strong>EXP Multiplier:</strong> 
+                                        <span id="expMultiplierValue">1.0</span>x
+                                    </label>
+                                    <input type="range" class="form-range" min="0.5" max="3.0" step="0.1" 
+                                           value="1.0" id="expMultiplier" 
+                                           oninput="document.getElementById('expMultiplierValue').textContent = this.value">
+                                    <small class="text-muted">Nhân EXP cho tất cả hoạt động</small>
+                                </div>
+
+                                <div class="slider-container">
+                                    <label class="form-label">
+                                        <strong>EXP cho mỗi bài học hoàn thành:</strong>
+                                        <span id="lessonExpValue">100</span> EXP
+                                    </label>
+                                    <input type="range" class="form-range" min="50" max="500" step="10" 
+                                           value="100" id="lessonExp"
+                                           oninput="document.getElementById('lessonExpValue').textContent = this.value">
+                                </div>
+
+                                <div class="slider-container">
+                                    <label class="form-label">
+                                        <strong>EXP cho mỗi quiz đúng:</strong>
+                                        <span id="quizExpValue">20</span> EXP
+                                    </label>
+                                    <input type="range" class="form-range" min="10" max="100" step="5" 
+                                           value="20" id="quizExp"
+                                           oninput="document.getElementById('quizExpValue').textContent = this.value">
+                                </div>
+
+                                <div class="slider-container">
+                                    <label class="form-label">
+                                        <strong>Streak bonus per day:</strong>
+                                        <span id="streakBonusValue">5</span> EXP/day
+                                    </label>
+                                    <input type="range" class="form-range" min="1" max="20" step="1" 
+                                           value="5" id="streakBonus"
+                                           oninput="document.getElementById('streakBonusValue').textContent = this.value">
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="preview-box">
+                                    <h6 class="text-center mb-3">Preview EXP Calculation</h6>
+                                    <div id="expPreview">
+                                        <div class="mb-2">
+                                            <i class="bi bi-book"></i> Complete lesson: 
+                                            <strong><span id="previewLesson">100</span> EXP</strong>
+                                        </div>
+                                        <div class="mb-2">
+                                            <i class="bi bi-question-circle"></i> Correct quiz: 
+                                            <strong><span id="previewQuiz">20</span> EXP</strong>
+                                        </div>
+                                        <div class="mb-2">
+                                            <i class="bi bi-fire"></i> 7-day streak bonus: 
+                                            <strong><span id="previewStreak">35</span> EXP</strong>
+                                        </div>
+                                        <hr>
+                                        <div class="text-center">
+                                            <strong>With multiplier <span id="previewMultiplier">1.0</span>x:</strong>
+                                            <h4 class="text-primary" id="previewTotal">155 EXP</h4>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Difficulty Settings -->
+                <div class="card settings-card difficulty-settings mb-4">
+                    <div class="card-header bg-danger bg-opacity-10">
+                        <h5 class="mb-0"><i class="bi bi-speedometer text-danger"></i> Cài Đặt Độ Khó</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>Easy Mode:</strong></label>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">EXP Required</span>
+                                        <input type="number" class="form-control" value="100" id="easyExp">
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">Passing Score</span>
+                                        <input type="number" class="form-control" value="60" id="easyScore">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>Medium Mode:</strong></label>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">EXP Required</span>
+                                        <input type="number" class="form-control" value="200" id="mediumExp">
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">Passing Score</span>
+                                        <input type="number" class="form-control" value="75" id="mediumScore">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label><strong>Hard Mode:</strong></label>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">EXP Required</span>
+                                        <input type="number" class="form-control" value="300" id="hardExp">
+                                    </div>
+                                    <div class="input-group mb-2">
+                                        <span class="input-group-text">Passing Score</span>
+                                        <input type="number" class="form-control" value="85" id="hardScore">
+                                        <span class="input-group-text">%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Settings -->
+                <div class="card settings-card system-settings mb-4">
+                    <div class="card-header bg-info bg-opacity-10">
+                        <h5 class="mb-0"><i class="bi bi-sliders text-info"></i> Cài Đặt Chung</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Maintenance Mode</strong>
+                                        <br><small class="text-muted">Tạm khóa hệ thống cho người dùng</small>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="maintenanceMode">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Allow Registration</strong>
+                                        <br><small class="text-muted">Cho phép đăng ký tài khoản mới</small>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="allowRegistration" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Email Verification Required</strong>
+                                        <br><small class="text-muted">Yêu cầu xác thực email</small>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="emailVerification">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Public Leaderboard</strong>
+                                        <br><small class="text-muted">Hiển thị bảng xếp hạng công khai</small>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="publicLeaderboard" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label><strong>Max Lessons Per Day:</strong></label>
+                                    <input type="number" class="form-control" value="10" id="maxLessons">
+                                    <small class="text-muted">0 = không giới hạn</small>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label><strong>Session Timeout (minutes):</strong></label>
+                                    <input type="number" class="form-control" value="30" id="sessionTimeout">
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label><strong>Default Level Name:</strong></label>
+                                    <input type="text" class="form-control" value="Beginner" id="defaultLevel">
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label><strong>EXP to Level Up:</strong></label>
+                                    <input type="number" class="form-control" value="1000" id="expToLevel">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notification Settings -->
+                <div class="card settings-card notification-settings mb-4">
+                    <div class="card-header bg-success bg-opacity-10">
+                        <h5 class="mb-0"><i class="bi bi-bell-fill text-success"></i> Cài Đặt Thông Báo</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Achievement Notifications</strong>
+                                        <br><small class="text-muted">Thông báo khi đạt thành tựu</small>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="achievementNotif" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Daily Reminder</strong>
+                                        <br><small class="text-muted">Nhắc nhở học mỗi ngày</small>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="dailyReminder" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div>
+                                        <strong>Streak Warning</strong>
+                                        <br><small class="text-muted">Cảnh báo sắp mất streak</small>
+                                    </div>
+                                    <label class="toggle-switch">
+                                        <input type="checkbox" id="streakWarning" checked>
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label><strong>Daily Reminder Time:</strong></label>
+                                    <input type="time" class="form-control" value="20:00" id="reminderTime">
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label><strong>Notification Email:</strong></label>
+                                    <input type="email" class="form-control" value="admin@pianolearn.com" id="notificationEmail">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <div class="text-center mb-4">
+                    <button class="btn btn-lg btn-primary" onclick="saveSettings()">
+                        <i class="bi bi-save"></i> Lưu Tất Cả Cài Đặt
+                    </button>
+                    <button class="btn btn-lg btn-secondary ms-2" onclick="resetSettings()">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset về mặc định
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('adminToken');
+        if (!token) window.location.href = '/admin/login';
+
+        // Update EXP preview in real-time
+        document.getElementById('expMultiplier').addEventListener('input', updateExpPreview);
+        document.getElementById('lessonExp').addEventListener('input', updateExpPreview);
+        document.getElementById('quizExp').addEventListener('input', updateExpPreview);
+        document.getElementById('streakBonus').addEventListener('input', updateExpPreview);
+
+        function updateExpPreview() {
+            const multiplier = parseFloat(document.getElementById('expMultiplier').value);
+            const lessonExp = parseInt(document.getElementById('lessonExp').value);
+            const quizExp = parseInt(document.getElementById('quizExp').value);
+            const streakBonus = parseInt(document.getElementById('streakBonus').value);
+
+            const lessonTotal = lessonExp * multiplier;
+            const quizTotal = quizExp * multiplier;
+            const streakTotal = (streakBonus * 7) * multiplier;
+            const total = lessonTotal + quizTotal + streakTotal;
+
+            document.getElementById('previewLesson').textContent = Math.round(lessonTotal);
+            document.getElementById('previewQuiz').textContent = Math.round(quizTotal);
+            document.getElementById('previewStreak').textContent = Math.round(streakTotal);
+            document.getElementById('previewMultiplier').textContent = multiplier.toFixed(1);
+            document.getElementById('previewTotal').textContent = Math.round(total) + ' EXP';
+        }
+
+        function saveSettings() {
+            const settings = {
+                exp: {
+                    multiplier: parseFloat(document.getElementById('expMultiplier').value),
+                    lessonExp: parseInt(document.getElementById('lessonExp').value),
+                    quizExp: parseInt(document.getElementById('quizExp').value),
+                    streakBonus: parseInt(document.getElementById('streakBonus').value)
+                },
+                difficulty: {
+                    easy: {
+                        expRequired: parseInt(document.getElementById('easyExp').value),
+                        passingScore: parseInt(document.getElementById('easyScore').value)
+                    },
+                    medium: {
+                        expRequired: parseInt(document.getElementById('mediumExp').value),
+                        passingScore: parseInt(document.getElementById('mediumScore').value)
+                    },
+                    hard: {
+                        expRequired: parseInt(document.getElementById('hardExp').value),
+                        passingScore: parseInt(document.getElementById('hardScore').value)
+                    }
+                },
+                system: {
+                    maintenanceMode: document.getElementById('maintenanceMode').checked,
+                    allowRegistration: document.getElementById('allowRegistration').checked,
+                    emailVerification: document.getElementById('emailVerification').checked,
+                    publicLeaderboard: document.getElementById('publicLeaderboard').checked,
+                    maxLessons: parseInt(document.getElementById('maxLessons').value),
+                    sessionTimeout: parseInt(document.getElementById('sessionTimeout').value),
+                    defaultLevel: document.getElementById('defaultLevel').value,
+                    expToLevel: parseInt(document.getElementById('expToLevel').value)
+                },
+                notifications: {
+                    achievementNotif: document.getElementById('achievementNotif').checked,
+                    dailyReminder: document.getElementById('dailyReminder').checked,
+                    streakWarning: document.getElementById('streakWarning').checked,
+                    reminderTime: document.getElementById('reminderTime').value,
+                    notificationEmail: document.getElementById('notificationEmail').value
+                }
+            };
+
+            // Save to localStorage (in a real app, this would be saved to database)
+            localStorage.setItem('systemSettings', JSON.stringify(settings));
+            
+            alert('✅ Đã lưu cài đặt thành công!\n\n(Lưu ý: Trong phiên bản demo này, cài đặt được lưu vào localStorage. Trong production, cần tạo API backend để lưu vào database.)');
+        }
+
+        function resetSettings() {
+            if (confirm('Bạn có chắc muốn reset tất cả về mặc định?')) {
+                localStorage.removeItem('systemSettings');
+                location.reload();
+            }
+        }
+
+        // Load saved settings
+        function loadSettings() {
+            const saved = localStorage.getItem('systemSettings');
+            if (saved) {
+                const settings = JSON.parse(saved);
+                
+                // EXP settings
+                if (settings.exp) {
+                    document.getElementById('expMultiplier').value = settings.exp.multiplier;
+                    document.getElementById('lessonExp').value = settings.exp.lessonExp;
+                    document.getElementById('quizExp').value = settings.exp.quizExp;
+                    document.getElementById('streakBonus').value = settings.exp.streakBonus;
+                    updateExpPreview();
+                }
+
+                // Difficulty settings
+                if (settings.difficulty) {
+                    document.getElementById('easyExp').value = settings.difficulty.easy.expRequired;
+                    document.getElementById('easyScore').value = settings.difficulty.easy.passingScore;
+                    document.getElementById('mediumExp').value = settings.difficulty.medium.expRequired;
+                    document.getElementById('mediumScore').value = settings.difficulty.medium.passingScore;
+                    document.getElementById('hardExp').value = settings.difficulty.hard.expRequired;
+                    document.getElementById('hardScore').value = settings.difficulty.hard.passingScore;
+                }
+
+                // System settings
+                if (settings.system) {
+                    document.getElementById('maintenanceMode').checked = settings.system.maintenanceMode;
+                    document.getElementById('allowRegistration').checked = settings.system.allowRegistration;
+                    document.getElementById('emailVerification').checked = settings.system.emailVerification;
+                    document.getElementById('publicLeaderboard').checked = settings.system.publicLeaderboard;
+                    document.getElementById('maxLessons').value = settings.system.maxLessons;
+                    document.getElementById('sessionTimeout').value = settings.system.sessionTimeout;
+                    document.getElementById('defaultLevel').value = settings.system.defaultLevel;
+                    document.getElementById('expToLevel').value = settings.system.expToLevel;
+                }
+
+                // Notification settings
+                if (settings.notifications) {
+                    document.getElementById('achievementNotif').checked = settings.notifications.achievementNotif;
+                    document.getElementById('dailyReminder').checked = settings.notifications.dailyReminder;
+                    document.getElementById('streakWarning').checked = settings.notifications.streakWarning;
+                    document.getElementById('reminderTime').value = settings.notifications.reminderTime;
+                    document.getElementById('notificationEmail').value = settings.notifications.notificationEmail;
+                }
+            }
+        }
+
+        // Initialize
+        updateExpPreview();
+        loadSettings();
+    </script>
+</body>
+</html>

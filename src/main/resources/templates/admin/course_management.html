@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Khóa học - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .course-tree {
+            font-family: 'Courier New', monospace;
+        }
+        .course-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .course-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .lesson-item {
+            padding: 12px;
+            margin: 8px 0 8px 40px;
+            background: #f8f9fa;
+            border-left: 4px solid #0d6efd;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .lesson-item:hover {
+            background: #e9ecef;
+        }
+        .quiz-item {
+            padding: 10px;
+            margin: 5px 0 5px 80px;
+            background: #fff3cd;
+            border-left: 3px solid #ffc107;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .collapsed-icon::before {
+            content: "▶";
+            margin-right: 10px;
+        }
+        .expanded-icon::before {
+            content: "▼";
+            margin-right: 10px;
+        }
+        .stats-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.2);
+            font-size: 12px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('course_management')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2><i class="bi bi-diagram-3"></i> Quản lý Cấu trúc Khóa học</h2>
+                        <p class="text-muted">Xem cây khóa học → bài học → câu đố</p>
+                    </div>
+                    <div>
+                        <button class="btn btn-primary" onclick="expandAll()">
+                            <i class="bi bi-arrows-angle-expand"></i> Mở rộng tất cả
+                        </button>
+                        <button class="btn btn-secondary" onclick="collapseAll()">
+                            <i class="bi bi-arrows-angle-contract"></i> Thu gọn tất cả
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card text-center bg-primary text-white">
+                            <div class="card-body">
+                                <h3 id="totalCourses">0</h3>
+                                <p class="mb-0">Khóa học</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center bg-success text-white">
+                            <div class="card-body">
+                                <h3 id="totalLessons">0</h3>
+                                <p class="mb-0">Bài học</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center bg-warning text-white">
+                            <div class="card-body">
+                                <h3 id="totalQuizzes">0</h3>
+                                <p class="mb-0">Câu đố</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-center bg-info text-white">
+                            <div class="card-body">
+                                <h3 id="avgLessonsPerCourse">0</h3>
+                                <p class="mb-0">Lessons/Course</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tree View -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="bi bi-tree"></i> Cây cấu trúc</h5>
+                    </div>
+                    <div class="card-body course-tree" id="courseTree">
+                        <!-- Tree will be rendered here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('adminToken');
+        let coursesData = [];
+
+        if (!token) window.location.href = '/admin/login';
+
+        async function loadCourseStructure() {
+            try {
+                // Load all data
+                const [courses, lessons, quizzes] = await Promise.all([
+                    fetch('/api/admin/courses', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+                    fetch('/api/admin/lessons', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json()),
+                    fetch('/api/admin/piano-questions', { headers: { 'Authorization': `Bearer ${token}` } }).then(r => r.json())
+                ]);
+
+                console.log('Courses:', courses);
+                console.log('Lessons:', lessons);
+                console.log('Quizzes:', quizzes);
+
+                coursesData = courses.map(course => ({
+                    ...course,
+                    lessons: lessons.filter(l => l.courseId === course.courseId).map(lesson => ({
+                        ...lesson,
+                        quiz: quizzes.find(q => q.lessonId === lesson.lessonId) || null
+                    })),
+                    expanded: false
+                }));
+
+                console.log('Courses with lessons:', coursesData);
+
+                // Update stats
+                document.getElementById('totalCourses').textContent = courses.length;
+                document.getElementById('totalLessons').textContent = lessons.length;
+                document.getElementById('totalQuizzes').textContent = quizzes.length;
+                document.getElementById('avgLessonsPerCourse').textContent = 
+                    courses.length > 0 ? (lessons.length / courses.length).toFixed(1) : 0;
+
+                // Render tree
+                renderTree();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        function renderTree() {
+            const treeDiv = document.getElementById('courseTree');
+            treeDiv.innerHTML = '';
+
+            if (coursesData.length === 0) {
+                treeDiv.innerHTML = '<p class="text-muted">Chưa có khóa học nào</p>';
+                return;
+            }
+
+            coursesData.forEach((course, courseIndex) => {
+                // Course level
+                const courseDiv = document.createElement('div');
+                courseDiv.className = 'course-item';
+                courseDiv.innerHTML = `
+                    <span class="${course.expanded ? 'expanded-icon' : 'collapsed-icon'}"></span>
+                    <strong>${course.courseName || course.courseTitle || 'Unnamed Course'}</strong>
+                    <span class="stats-badge">
+                        <i class="bi bi-journal-text"></i> ${course.lessons.length} lessons
+                    </span>
+                    <span class="stats-badge">
+                        <i class="bi bi-question-circle"></i> ${course.lessons.filter(l => l.quiz).length} quizzes
+                    </span>
+                    <span class="stats-badge">
+                        <i class="bi bi-star"></i> Lv.${course.difficultyLevel || 'N/A'}
+                    </span>
+                `;
+                courseDiv.onclick = () => toggleCourse(courseIndex);
+                treeDiv.appendChild(courseDiv);
+
+                // Lessons (if expanded)
+                if (course.expanded) {
+                    course.lessons.forEach(lesson => {
+                        const lessonDiv = document.createElement('div');
+                        lessonDiv.className = 'lesson-item';
+                        lessonDiv.innerHTML = `
+                            <i class="bi bi-file-earmark-text text-primary"></i>
+                            <strong>${lesson.lessonTitle}</strong>
+                            <span class="badge bg-secondary">Order: ${lesson.lessonOrder}</span>
+                            <span class="badge bg-info">⭐ ${lesson.expReward || 0} EXP</span>
+                            ${lesson.expRequire > 0 ? `<span class="badge bg-warning">🔒 ${lesson.expRequire} EXP required</span>` : ''}
+                            ${lesson.quiz ? '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Has Quiz</span>' : '<span class="badge bg-danger">No Quiz</span>'}
+                        `;
+                        treeDiv.appendChild(lessonDiv);
+
+                        // Quiz (if exists)
+                        if (lesson.quiz) {
+                            const quizDiv = document.createElement('div');
+                            quizDiv.className = 'quiz-item';
+                            quizDiv.innerHTML = `
+                                <i class="bi bi-question-circle-fill text-warning"></i>
+                                <strong>Quiz:</strong> ${lesson.quiz.chord || 'Piano Question'}
+                                <span class="badge bg-warning ms-2">Diff: ${lesson.quiz.difficulty || 'N/A'}</span>
+                                <span class="badge bg-info ms-2">Count: ${lesson.quiz.questionCount || 1}</span>
+                            `;
+                            treeDiv.appendChild(quizDiv);
+                        }
+                    });
+                }
+            });
+        }
+
+        function toggleCourse(index) {
+            coursesData[index].expanded = !coursesData[index].expanded;
+            renderTree();
+        }
+
+        function expandAll() {
+            coursesData.forEach(c => c.expanded = true);
+            renderTree();
+        }
+
+        function collapseAll() {
+            coursesData.forEach(c => c.expanded = false);
+            renderTree();
+        }
+
+        loadCourseStructure();
+    </script>
+</body>
+</html>

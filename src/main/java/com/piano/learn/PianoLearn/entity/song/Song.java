@@ -55,6 +55,10 @@ public class Song {
     @Builder.Default
     private Integer popularityScore = 0;
     
+    @Column(name = "rating")
+    @Builder.Default
+    private Double rating = 0.0;
+    
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
     

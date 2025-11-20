@@ -3,6 +3,7 @@ package com.piano.learn.PianoLearn.entity.piano_question;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 
 import jakarta.persistence.Column;
@@ -36,7 +37,14 @@ public class PianoQuestion {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "lesson_id")
-    private Lesson lesson; 
+    @JsonIgnoreProperties({"course", "hibernateLazyInitializer", "handler"})
+    private Lesson lesson;
+    
+    // Helper method to get lessonId for JSON serialization
+    @JsonProperty("lessonId")
+    public Integer getLessonId() {
+        return lesson != null ? lesson.getLessonId() : null;
+    }
 
     @Column(nullable = false, columnDefinition = "json") 
     private String midiNumbers;

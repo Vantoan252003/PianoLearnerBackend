@@ -51,4 +51,9 @@ public class AdminUserProgressController {
         boolean deleted = userProgressService.deleteUserProgress(id);
         return deleted ? ResponseEntity.ok().build() : ResponseEntity.notFound().build();
     }
+    
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<UserProgress>> getUserProgressByUserId(@PathVariable Integer userId) {
+        return ResponseEntity.ok(userProgressService.getUserProgressByUserId(userId));
+    }
 }

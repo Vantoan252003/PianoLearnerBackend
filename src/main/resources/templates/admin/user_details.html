@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết User - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .user-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            height: 100%;
+        }
+        .progress-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #0d6efd;
+        }
+        .achievement-badge {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #ffc107;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('user_details')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <!-- User Selection -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5><i class="bi bi-person-circle"></i> Chọn User</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="text" class="form-control" id="searchUser" placeholder="🔍 Tìm user theo tên hoặc email...">
+                            </div>
+                            <div class="col-md-6">
+                                <select class="form-select" id="userSelect">
+                                    <option value="">-- Chọn user --</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User Info Card -->
+                <div id="userInfoSection" style="display: none;">
+                    <div class="user-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 text-center">
+                                <div style="width: 100px; height: 100px; border-radius: 50%; background: white; margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: bold; color: #764ba2;" id="userAvatar">
+                                    U
+                                </div>
+                            </div>
+                            <div class="col-md-10">
+                                <h3 id="userName">User Name</h3>
+                                <p class="mb-2"><i class="bi bi-envelope"></i> <span id="userEmail">email@example.com</span></p>
+                                <p class="mb-2"><i class="bi bi-calendar"></i> Tham gia: <span id="userJoinDate">2025-01-01</span></p>
+                                <div class="mt-3">
+                                    <span class="badge bg-light text-dark me-2">
+                                        <i class="bi bi-star-fill text-warning"></i> Level: <span id="userLevel">Beginner</span>
+                                    </span>
+                                    <span class="badge bg-light text-dark me-2">
+                                        <i class="bi bi-fire text-danger"></i> Streak: <span id="userStreak">0</span> ngày
+                                    </span>
+                                    <span class="badge bg-light text-dark">
+                                        <i class="bi bi-trophy-fill text-success"></i> EXP: <span id="userExp">0</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Statistics Row -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-primary text-white">
+                                <h3 id="totalLessons">0</h3>
+                                <p>Bài học đã học</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-success text-white">
+                                <h3 id="completedLessons">0</h3>
+                                <p>Hoàn thành</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-warning text-white">
+                                <h3 id="totalAchievements">0</h3>
+                                <p>Thành tựu</p>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card stat-card bg-info text-white">
+                                <h3 id="totalTime">0</h3>
+                                <p>Phút học tập</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" data-bs-toggle="tab" href="#progressTab">
+                                <i class="bi bi-graph-up"></i> Tiến độ học tập
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#achievementsTab">
+                                <i class="bi bi-trophy"></i> Thành tựu
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" data-bs-toggle="tab" href="#ratingsTab">
+                                <i class="bi bi-star"></i> Đánh giá
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content p-4 border border-top-0">
+                        <!-- Progress Tab -->
+                        <div class="tab-pane fade show active" id="progressTab">
+                            <h5>Danh sách bài học</h5>
+                            <div id="progressList"></div>
+                        </div>
+
+                        <!-- Achievements Tab -->
+                        <div class="tab-pane fade" id="achievementsTab">
+                            <h5>Thành tựu đã mở khóa</h5>
+                            <div id="achievementsList"></div>
+                        </div>
+
+                        <!-- Ratings Tab -->
+                        <div class="tab-pane fade" id="ratingsTab">
+                            <h5>Đánh giá bài hát</h5>
+                            <div id="ratingsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const token = localStorage.getItem('adminToken');
+        let allUsers = [];
+
+        if (!token) window.location.href = '/admin/login';
+
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                allUsers = await response.json();
+                populateUserSelect(allUsers);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải danh sách user!');
+            }
+        }
+
+        function populateUserSelect(users) {
+            const select = document.getElementById('userSelect');
+            select.innerHTML = '<option value="">-- Chọn user --</option>';
+            users.forEach(user => {
+                const option = document.createElement('option');
+                option.value = user.userId;
+                option.textContent = `${user.fullName} (${user.email})`;
+                select.appendChild(option);
+            });
+        }
+
+        // Search users
+        document.getElementById('searchUser').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allUsers.filter(user => 
+                user.fullName.toLowerCase().includes(searchTerm) ||
+                user.email.toLowerCase().includes(searchTerm)
+            );
+            populateUserSelect(filtered);
+        });
+
+        // User selection
+        document.getElementById('userSelect').addEventListener('change', (e) => {
+            const userId = e.target.value;
+            if (userId) {
+                loadUserDetails(userId);
+            } else {
+                document.getElementById('userInfoSection').style.display = 'none';
+            }
+        });
+
+        async function loadUserDetails(userId) {
+            try {
+                // Load user info
+                const userResponse = await fetch(`/api/admin/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const user = await userResponse.json();
+
+                // Display user info
+                const initials = user.fullName.split(' ').map(w => w[0]).join('').toUpperCase();
+                document.getElementById('userAvatar').textContent = initials;
+                document.getElementById('userName').textContent = user.fullName;
+                document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('userJoinDate').textContent = new Date(user.createdAt).toLocaleDateString('vi-VN');
+                document.getElementById('userLevel').textContent = user.levelName || 'Beginner';
+                document.getElementById('userStreak').textContent = user.streakDays || 0;
+                document.getElementById('userExp').textContent = user.totalExp || 0;
+
+                // Load progress
+                await loadUserProgress(userId);
+                
+                // Load achievements
+                await loadUserAchievements(userId);
+                
+                // Load ratings
+                await loadUserRatings(userId);
+
+                // Show section
+                document.getElementById('userInfoSection').style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải thông tin user!');
+            }
+        }
+
+        async function loadUserProgress(userId) {
+            try {
+                const response = await fetch(`/api/admin/user-progress/user/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const progressList = await response.json();
+
+                const totalLessons = progressList.length;
+                const completedLessons = progressList.filter(p => p.isCompleted).length;
+                const totalTime = progressList.reduce((sum, p) => sum + (p.timeSpentMinutes || 0), 0);
+
+                document.getElementById('totalLessons').textContent = totalLessons;
+                document.getElementById('completedLessons').textContent = completedLessons;
+                document.getElementById('totalTime').textContent = totalTime;
+
+                // Render progress list
+                const progressDiv = document.getElementById('progressList');
+                progressDiv.innerHTML = '';
+                
+                if (progressList.length === 0) {
+                    progressDiv.innerHTML = '<p class="text-muted">Chưa có tiến độ học tập</p>';
+                    return;
+                }
+
+                progressList.forEach(progress => {
+                    const div = document.createElement('div');
+                    div.className = 'progress-item';
+                    div.innerHTML = `
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6>Lesson ID: ${progress.lessonId}</h6>
+                                <div class="progress mt-2" style="width: 300px;">
+                                    <div class="progress-bar ${progress.isCompleted ? 'bg-success' : 'bg-primary'}" 
+                                         style="width: ${progress.completionPercentage}%">
+                                        ${progress.completionPercentage}%
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge ${progress.isCompleted ? 'bg-success' : 'bg-warning'}">
+                                    ${progress.isCompleted ? '✓ Hoàn thành' : 'Đang học'}
+                                </span>
+                                <p class="mb-0 mt-2 text-muted">
+                                    <small><i class="bi bi-clock"></i> ${progress.timeSpentMinutes} phút</small>
+                                </p>
+                                <p class="mb-0 text-muted">
+                                    <small>${new Date(progress.lastAccessed).toLocaleString('vi-VN')}</small>
+                                </p>
+                            </div>
+                        </div>
+                    `;
+                    progressDiv.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function loadUserAchievements(userId) {
+            try {
+                const response = await fetch(`/api/admin/user-achievements/user/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const achievements = await response.json();
+
+                document.getElementById('totalAchievements').textContent = achievements.length;
+
+                const achievementsDiv = document.getElementById('achievementsList');
+                achievementsDiv.innerHTML = '';
+                
+                if (achievements.length === 0) {
+                    achievementsDiv.innerHTML = '<p class="text-muted">Chưa mở khóa thành tựu nào</p>';
+                    return;
+                }
+
+                achievements.forEach(ach => {
+                    const div = document.createElement('div');
+                    div.className = 'd-inline-block text-center m-3';
+                    div.innerHTML = `
+                        <div class="achievement-badge">🏆</div>
+                        <p class="mb-0 mt-2"><strong>Achievement ${ach.achievementId}</strong></p>
+                        <small class="text-muted">${new Date(ach.unlockedAt).toLocaleDateString('vi-VN')}</small>
+                    `;
+                    achievementsDiv.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+        
+        async function loadUserRatings(userId) {
+            try {
+                const response = await fetch(`/api/admin/song-ratings/user/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const ratings = await response.json();
+
+                const ratingsDiv = document.getElementById('ratingsList');
+                ratingsDiv.innerHTML = '';
+                
+                if (ratings.length === 0) {
+                    ratingsDiv.innerHTML = '<p class="text-muted">Chưa có đánh giá nào</p>';
+                    return;
+                }
+
+                ratings.forEach(rating => {
+                    const div = document.createElement('div');
+                    div.className = 'progress-item';
+                    div.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6><i class="bi bi-music-note"></i> ${rating.songTitle}</h6>
+                                <span class="badge bg-warning text-dark">${rating.rating} ⭐</span>
+                                <p class="mt-2 mb-0">${rating.comment || '<em class="text-muted">Không có nhận xét</em>'}</p>
+                            </div>
+                            <div class="text-end">
+                                <small class="text-muted">${new Date(rating.createdAt).toLocaleString('vi-VN')}</small>
+                            </div>
+                        </div>
+                    `;
+                    ratingsDiv.appendChild(div);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        loadUsers();
+    </script>
+</body>
+</html>

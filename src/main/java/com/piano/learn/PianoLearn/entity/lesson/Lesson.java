@@ -3,6 +3,7 @@ package com.piano.learn.PianoLearn.entity.lesson;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.piano.learn.PianoLearn.entity.courses.Courses;
 
 import jakarta.persistence.Column;
@@ -35,7 +36,14 @@ public class Lesson {
     
     @ManyToOne
     @JoinColumn(name = "course_id", nullable = false)
+    @JsonIgnoreProperties({"lessons"}) // Avoid circular reference
     private Courses course;
+    
+    // Helper method to get courseId for JSON serialization
+    @JsonProperty("courseId")
+    public Integer getCourseId() {
+        return course != null ? course.getCourseId() : null;
+    }
     
     @Column(name = "lesson_title", nullable = false, length = 150)
     private String lessonTitle;
