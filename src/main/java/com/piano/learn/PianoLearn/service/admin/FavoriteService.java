@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.favorite.Favorite;
+import com.piano.learn.PianoLearn.entity.sheet.SheetMusic;
 import com.piano.learn.PianoLearn.entity.song.Song;
 import com.piano.learn.PianoLearn.repository.auth.UserRepository;
 import com.piano.learn.PianoLearn.repository.favorite.FavoriteRepository;
+import com.piano.learn.PianoLearn.repository.sheet.SheetMusicRepository;
 import com.piano.learn.PianoLearn.repository.song.SongRepository;
 
 @Service
@@ -24,6 +26,9 @@ public class FavoriteService {
     
     @Autowired
     private SongRepository songRepository;
+    
+    @Autowired
+    private SheetMusicRepository sheetMusicRepository;
     
     public List<Favorite> getAllFavorites() {
         return favoriteRepository.findAll();
@@ -69,7 +74,7 @@ public class FavoriteService {
             Favorite favorite = Favorite.builder()
                 .user(user)
                 .song(song)
-                .sheetId(null)
+                .sheetMusic(null)
                 .build();
             favoriteRepository.save(favorite);
         }
@@ -78,15 +83,16 @@ public class FavoriteService {
     // Add favorite for a sheet music
     public void addFavoriteSheet(Integer userId, Integer sheetId) {
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        SheetMusic sheetMusic = sheetMusicRepository.findById(sheetId).orElseThrow(() -> new RuntimeException("Sheet music not found"));
         
         // Check if already favorited
-        Optional<Favorite> existing = favoriteRepository.findByUser_UserIdAndSheetId(userId, sheetId);
+        Optional<Favorite> existing = favoriteRepository.findByUser_UserIdAndSheetMusic_SheetId(userId, sheetId);
         
         if (existing.isEmpty()) {
             Favorite favorite = Favorite.builder()
                 .user(user)
                 .song(null)
-                .sheetId(sheetId)
+                .sheetMusic(sheetMusic)
                 .build();
             favoriteRepository.save(favorite);
         }
@@ -105,7 +111,7 @@ public class FavoriteService {
     
     // Remove favorite by sheet
     public boolean removeFavoriteSheet(Integer userId, Integer sheetId) {
-        Optional<Favorite> favorite = favoriteRepository.findByUser_UserIdAndSheetId(userId, sheetId);
+        Optional<Favorite> favorite = favoriteRepository.findByUser_UserIdAndSheetMusic_SheetId(userId, sheetId);
         
         if (favorite.isPresent()) {
             favoriteRepository.delete(favorite.get());

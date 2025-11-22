@@ -12,5 +12,5 @@ import com.piano.learn.PianoLearn.entity.favorite.Favorite;
 public interface FavoriteRepository extends JpaRepository<Favorite, Integer> {
     List<Favorite> findByUser_UserId(Integer userId);
     Optional<Favorite> findByUser_UserIdAndSong_SongId(Integer userId, Integer songId);
-    Optional<Favorite> findByUser_UserIdAndSheetId(Integer userId, Integer sheetId);
+    Optional<Favorite> findByUser_UserIdAndSheetMusic_SheetId(Integer userId, Integer sheetId);
 }

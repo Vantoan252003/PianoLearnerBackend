@@ -5,7 +5,46 @@
   <title>Quản lý Câu hỏi Piano - Admin</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-  
+  <style>
+    .stat-card {
+      border-radius: 15px;
+      padding: 1.5rem;
+      color: white;
+      border: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+    }
+    .stat-card:hover { transform: translateY(-5px); }
+    .stat-icon { font-size: 2.5rem; opacity: 0.8; }
+    .stat-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; }
+    .stat-label { font-size: 0.9rem; opacity: 0.9; }
+    .filter-section {
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+    }
+    .midi-note {
+      display: inline-block;
+      padding: 4px 10px;
+      margin: 2px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .chord-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      margin: 2px;
+      background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+      color: #333;
+      border-radius: 15px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+  </style>
 </head>
 <body>
   <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
@@ -17,22 +56,89 @@
       </div>
 
       <div class="col-md-10">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <h2>Quản lý Câu hỏi Piano</h2>
-          <button class="btn btn-primary" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Thêm câu hỏi</button>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h2><i class="bi bi-question-circle-fill"></i> Quản lý Câu hỏi Piano</h2>
+          <button class="btn btn-primary" onclick="openAddModal()">
+            <i class="bi bi-plus-circle"></i> Thêm câu hỏi
+          </button>
         </div>
 
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+          <div class="col-md-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+              <i class="bi bi-question-circle stat-icon"></i>
+              <div class="stat-value" id="totalQuestions">0</div>
+              <div class="stat-label">Tổng Câu hỏi</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+              <i class="bi bi-star-fill stat-icon"></i>
+              <div class="stat-value" id="beginnerCount">0</div>
+              <div class="stat-label">Beginner</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+              <i class="bi bi-star-half stat-icon"></i>
+              <div class="stat-value" id="intermediateCount">0</div>
+              <div class="stat-label">Intermediate</div>
+            </div>
+          </div>
+          <div class="col-md-3">
+            <div class="stat-card" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);">
+              <i class="bi bi-rocket-takeoff-fill stat-icon"></i>
+              <div class="stat-value" id="advancedCount">0</div>
+              <div class="stat-label">Advanced</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-section">
+          <div class="row g-3">
+            <div class="col-md-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-funnel"></i> Độ khó
+              </label>
+              <select class="form-select" id="filterDifficulty" onchange="applyFilters()">
+                <option value="">Tất cả</option>
+                <option value="Beginner">Beginner</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold">
+                <i class="bi bi-book"></i> Bài học
+              </label>
+              <select class="form-select" id="filterLesson" onchange="applyFilters()">
+                <option value="">Tất cả</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold">
+                <i class="bi bi-search"></i> Tìm kiếm
+              </label>
+              <input type="text" class="form-control" id="searchInput" 
+                     placeholder="Tìm theo MIDI hoặc Chord..." 
+                     onkeyup="applyFilters()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Table -->
         <div class="table-responsive">
-          <table class="table table-striped table-hover">
-            <thead class="table-dark">
+          <table class="table table-hover">
+            <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
               <tr>
                 <th>ID</th>
-                <th>MIDI</th>
-                <th>Chord</th>
-                <th>Question Count</th>
+                <th>MIDI Notes</th>
+                <th>Chords</th>
+                <th>Số câu</th>
                 <th>Độ khó</th>
                 <th>Bài học</th>
-                <th>Ngày tạo</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
@@ -98,7 +204,9 @@
     const API_URL = '/api/admin/piano-questions';
     const token = localStorage.getItem('adminToken');
     let editMode = false;
+    let allQuestions = [];
     let lessons = [];
+
     
     // MIDI note mapping
     const MIDI_NOTES = [
@@ -186,6 +294,7 @@
         lessons.forEach(l => {
           select.innerHTML += `<option value="${l.lessonId}">${l.lessonTitle}</option>`;
         });
+        populateLessonFilter();
       } catch (e) {
         console.error('Error loading lessons', e);
       }
@@ -193,8 +302,57 @@
 
     async function loadData() {
       const res = await fetch(API_URL, { headers: { 'Authorization': `Bearer ${token}` }});
-      const data = await res.json();
-      renderTable(data);
+      allQuestions = await res.json();
+      updateStatistics();
+      populateLessonFilter();
+      applyFilters();
+    }
+
+    function updateStatistics() {
+      document.getElementById('totalQuestions').textContent = allQuestions.length;
+      
+      const beginner = allQuestions.filter(q => q.difficulty === 'Beginner').length;
+      document.getElementById('beginnerCount').textContent = beginner;
+      
+      const intermediate = allQuestions.filter(q => q.difficulty === 'Intermediate').length;
+      document.getElementById('intermediateCount').textContent = intermediate;
+      
+      const advanced = allQuestions.filter(q => q.difficulty === 'Advanced').length;
+      document.getElementById('advancedCount').textContent = advanced;
+    }
+
+    function populateLessonFilter() {
+      const filter = document.getElementById('filterLesson');
+      const lessonIds = [...new Set(allQuestions.map(q => q.lesson?.lessonId).filter(id => id))];
+      filter.innerHTML = '<option value="">Tất cả</option>';
+      lessonIds.forEach(id => {
+        const lesson = lessons.find(l => l.lessonId === id);
+        if (lesson) {
+          filter.innerHTML += `<option value="${id}">${lesson.lessonTitle}</option>`;
+        }
+      });
+    }
+
+    function applyFilters() {
+      const difficultyFilter = document.getElementById('filterDifficulty').value;
+      const lessonFilter = document.getElementById('filterLesson').value;
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+      let filtered = allQuestions.filter(q => {
+        const matchesDifficulty = !difficultyFilter || q.difficulty === difficultyFilter;
+        const matchesLesson = !lessonFilter || q.lesson?.lessonId == lessonFilter;
+        
+        let matchesSearch = true;
+        if (searchTerm) {
+          const midiStr = JSON.stringify(q.midiNumbers || []).toLowerCase();
+          const chordStr = JSON.stringify(q.chord || []).toLowerCase();
+          matchesSearch = midiStr.includes(searchTerm) || chordStr.includes(searchTerm);
+        }
+        
+        return matchesDifficulty && matchesLesson && matchesSearch;
+      });
+
+      renderTable(filtered);
     }
 
     function midiToNoteName(midi) {
@@ -211,33 +369,40 @@
           const midiArr = Array.isArray(q.midiNumbers) 
             ? q.midiNumbers 
             : JSON.parse(q.midiNumbers || '[]');
-          midiStr = midiArr.map(m => midiToNoteName(m)).join(', ');
+          midiStr = midiArr.map(m => `<span class="midi-note">${midiToNoteName(m)}</span>`).join(' ');
         } catch (e) {
-          midiStr = 'Invalid MIDI';
+          midiStr = '<span class="badge bg-secondary">Invalid</span>';
         }
+        
         let chordStr = '';
         try {
           const chordArr = Array.isArray(q.chord) 
             ? q.chord 
             : JSON.parse(q.chord || '[]');
           chordStr = chordArr.map(chord => 
-            '(' + chord.map(m => midiToNoteName(m)).join(', ') + ')'
-          ).join(' | ');
+            '<span class="chord-badge">' + chord.map(m => midiToNoteName(m)).join('-') + '</span>'
+          ).join(' ');
         } catch (e) {
-          chordStr = 'Invalid Chord';
+          chordStr = '<span class="badge bg-secondary">Invalid</span>';
         }
+        
+        const difficultyColor = {
+          'Beginner': 'success',
+          'Intermediate': 'warning',
+          'Advanced': 'danger'
+        }[q.difficulty] || 'secondary';
+        
         const tr = document.createElement('tr');
         tr.innerHTML = 
           '<td>' + q.questionId + '</td>' +
           '<td>' + midiStr + '</td>' +
           '<td>' + chordStr + '</td>' +
-          '<td>' + (q.questionCount || 0) + '</td>' +
-          '<td><span class="badge bg-info">' + q.difficulty + '</span></td>' +
-          '<td>' + (q.lesson ? q.lesson.lessonTitle : '-') + '</td>' +
-          '<td>' + (q.createdAt ? new Date(q.createdAt).toLocaleString('vi-VN') : '-') + '</td>' +
+          '<td><span class="badge bg-primary">' + (q.questionCount || 0) + '</span></td>' +
+          '<td><span class="badge bg-' + difficultyColor + '">' + q.difficulty + '</span></td>' +
+          '<td>' + (q.lesson ? '<span class="badge bg-info">' + q.lesson.lessonTitle + '</span>' : '-') + '</td>' +
           '<td>' +
-            '<button class="btn btn-sm btn-warning" onclick="editData(' + q.questionId + ')"><i class="bi bi-pencil"></i></button> ' +
-            '<button class="btn btn-sm btn-danger" onclick="deleteData(' + q.questionId + ')"><i class="bi bi-trash"></i></button>' +
+            '<button class="btn btn-sm btn-warning" onclick="editData(' + q.questionId + ')" title="Sửa"><i class="bi bi-pencil"></i></button> ' +
+            '<button class="btn btn-sm btn-danger" onclick="deleteData(' + q.questionId + ')" title="Xóa"><i class="bi bi-trash"></i></button>' +
           '</td>';
         tbody.appendChild(tr);
       });

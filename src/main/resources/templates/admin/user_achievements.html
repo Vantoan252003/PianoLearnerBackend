@@ -6,6 +6,26 @@
     <title>Thành tích User - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon { font-size: 2.5rem; opacity: 0.8; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-label { font-size: 0.9rem; opacity: 0.9; }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
 </head>
 <body>
     <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
@@ -17,15 +37,62 @@
             </div>
 
             <div class="col-md-10">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Thành tích User</h2>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-award-fill"></i> Thành tích User</h2>
                 </div>
 
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-award stat-icon"></i>
+                            <div class="stat-value" id="totalUserAchievements">0</div>
+                            <div class="stat-label">Tổng Thành tích Đạt được</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="bi bi-people-fill stat-icon"></i>
+                            <div class="stat-value" id="uniqueUsers">0</div>
+                            <div class="stat-label">Người dùng Đạt thành tích</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="bi bi-trophy-fill stat-icon"></i>
+                            <div class="stat-value" id="uniqueAchievements">0</div>
+                            <div class="stat-label">Loại Thành tích Khác nhau</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Tìm theo User
+                            </label>
+                            <input type="text" class="form-control" id="searchUser" 
+                                   placeholder="Tìm theo tên người dùng..." 
+                                   onkeyup="applyFilters()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Tìm theo Thành tích
+                            </label>
+                            <input type="text" class="form-control" id="searchAchievement" 
+                                   placeholder="Tìm theo tên thành tích..." 
+                                   onkeyup="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-hover">
+                        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                             <tr>
-                                <th>ID</th>
                                 <th>User</th>
                                 <th>Achievement</th>
                                 <th>Ngày đạt</th>
@@ -43,21 +110,53 @@
     <script>
         const API_URL = '/api/admin/user-achievements';
         const token = localStorage.getItem('adminToken');
+        let allUserAchievements = [];
+        
         if(!token) window.location.href='/admin/login';
 
         async function loadData(){
             const res = await fetch(API_URL, { headers: { 'Authorization': `Bearer ${token}` }});
-            const data = await res.json();
+            allUserAchievements = await res.json();
+            updateStatistics();
+            applyFilters();
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalUserAchievements').textContent = allUserAchievements.length;
+            
+            const uniqueUserIds = [...new Set(allUserAchievements.map(ua => ua.user?.userId).filter(id => id))];
+            document.getElementById('uniqueUsers').textContent = uniqueUserIds.length;
+            
+            const uniqueAchIds = [...new Set(allUserAchievements.map(ua => ua.achievement?.achievementId).filter(id => id))];
+            document.getElementById('uniqueAchievements').textContent = uniqueAchIds.length;
+        }
+
+        function applyFilters() {
+            const userSearch = document.getElementById('searchUser').value.toLowerCase();
+            const achSearch = document.getElementById('searchAchievement').value.toLowerCase();
+
+            let filtered = allUserAchievements.filter(ua => {
+                const matchesUser = !userSearch || (ua.user?.fullName || '').toLowerCase().includes(userSearch);
+                const matchesAch = !achSearch || (ua.achievement?.achievementName || '').toLowerCase().includes(achSearch);
+                return matchesUser && matchesAch;
+            });
+
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             data.forEach(ua => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${ua.id}</td>
-                    <td>${ua.user ? ua.user.fullName : '-'}</td>
-                    <td>${ua.achievement ? ua.achievement.title : '-'}</td>
-                    <td>${ua.achievedAt ? new Date(ua.achievedAt).toLocaleDateString('vi-VN') : '-'}</td>
-                    <td><button class='btn btn-sm btn-danger' onclick='deleteData(${ua.id})'><i class='bi bi-trash'></i></button></td>
+                    <td>
+                        <strong>${ua.user ? ua.user.fullName : '-'}</strong>
+                        <br><small class="text-muted">${ua.user ? ua.user.email : ''}</small>
+                    </td>
+                    <td><span class="badge bg-primary"><i class="bi bi-trophy"></i> ${ua.achievement ? ua.achievement.achievementName : '-'}</span></td>
+                    <td><small>${ua.achievedAt ? new Date(ua.achievedAt).toLocaleString('vi-VN') : '-'}</small></td>
+                    <td><button class='btn btn-sm btn-danger' onclick='deleteData(${ua.id})' title='Xóa'><i class='bi bi-trash'></i></button></td>
                 `;
                 tbody.appendChild(tr);
             });

@@ -6,7 +6,32 @@
     <title>Quản lý Bài học - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon { font-size: 2.5rem; opacity: 0.8; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-label { font-size: 0.9rem; opacity: 0.9; }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .badge-lock {
+            background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);
+        }
+        .badge-reward {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
 </head>
 <body>
     <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
@@ -18,14 +43,81 @@
             </div>
 
             <div class="col-md-10">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Quản lý Bài học</h2>
-                    <button class="btn btn-primary" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Thêm bài học</button>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-journal-text-fill"></i> Quản lý Bài học</h2>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i class="bi bi-plus-circle"></i> Thêm bài học
+                    </button>
                 </div>
 
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-journal-text stat-icon"></i>
+                            <div class="stat-value" id="totalLessons">0</div>
+                            <div class="stat-label">Tổng Bài học</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="bi bi-unlock-fill stat-icon"></i>
+                            <div class="stat-value" id="unlockedCount">0</div>
+                            <div class="stat-label">Không khóa</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <i class="bi bi-lock-fill stat-icon"></i>
+                            <div class="stat-value" id="lockedCount">0</div>
+                            <div class="stat-label">Yêu cầu EXP</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="bi bi-star-fill stat-icon"></i>
+                            <div class="stat-value" id="totalExpReward">0</div>
+                            <div class="stat-label">Tổng EXP Thưởng</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-book"></i> Khóa học
+                            </label>
+                            <select class="form-select" id="filterCourse" onchange="applyFilters()">
+                                <option value="">Tất cả</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-sort-down"></i> Sắp xếp theo
+                            </label>
+                            <select class="form-select" id="sortBy" onchange="applyFilters()">
+                                <option value="lessonOrder">Thứ tự</option>
+                                <option value="expReward">EXP thưởng</option>
+                                <option value="expRequired">EXP yêu cầu</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </label>
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="Tìm theo tiêu đề..." 
+                                   onkeyup="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-hover">
+                        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                             <tr>
                                 <th>ID</th>
                                 <th>Tiêu đề</th>
@@ -33,8 +125,7 @@
                                 <th>Thứ tự</th>
                                 <th>EXP yêu cầu</th>
                                 <th>EXP thưởng</th>
-                                <th>Thời lượng (phút)</th>
-                                <th>Ngày tạo</th>
+                                <th>Thời lượng</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -128,6 +219,7 @@
         const token = localStorage.getItem('adminToken');
         let editMode = false;
         let courses = [];
+        let allLessons = [];
 
         if (!token) window.location.href = '/admin/login';
 
@@ -156,12 +248,61 @@
                     window.location.href = '/admin/login';
                     return;
                 }
-                const data = await response.json();
-                renderTable(data);
+                allLessons = await response.json();
+                updateStatistics();
+                populateCourseFilter();
+                applyFilters();
             } catch (error) {
                 console.error('Error:', error);
                 alert('Lỗi khi tải dữ liệu!');
             }
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalLessons').textContent = allLessons.length;
+            
+            const unlocked = allLessons.filter(l => !l.expRequire || l.expRequire === 0).length;
+            document.getElementById('unlockedCount').textContent = unlocked;
+            
+            const locked = allLessons.filter(l => l.expRequire && l.expRequire > 0).length;
+            document.getElementById('lockedCount').textContent = locked;
+            
+            const totalExp = allLessons.reduce((sum, l) => sum + (l.expReward || 0), 0);
+            document.getElementById('totalExpReward').textContent = totalExp;
+        }
+
+        function populateCourseFilter() {
+            const filter = document.getElementById('filterCourse');
+            const courseIds = [...new Set(allLessons.map(l => l.course?.courseId).filter(id => id))];
+            filter.innerHTML = '<option value="">Tất cả</option>';
+            courseIds.forEach(id => {
+                const course = courses.find(c => c.courseId === id);
+                if (course) {
+                    filter.innerHTML += `<option value="${id}">${course.courseName}</option>`;
+                }
+            });
+        }
+
+        function applyFilters() {
+            const courseFilter = document.getElementById('filterCourse').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allLessons.filter(lesson => {
+                const matchesCourse = !courseFilter || lesson.course?.courseId == courseFilter;
+                const matchesSearch = !searchTerm || 
+                    lesson.lessonTitle.toLowerCase().includes(searchTerm);
+                return matchesCourse && matchesSearch;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'lessonOrder') return (a.lessonOrder || 0) - (b.lessonOrder || 0);
+                if (sortBy === 'expReward') return (b.expReward || 0) - (a.expReward || 0);
+                if (sortBy === 'expRequired') return (b.expRequire || 0) - (a.expRequire || 0);
+                return 0;
+            });
+
+            renderTable(filtered);
         }
 
         function renderTable(data) {
@@ -170,26 +311,28 @@
             data.forEach(item => {
                 const tr = document.createElement('tr');
                 
-                // Badge cho EXP requirement
                 let expRequireBadge = '<span class="badge bg-success" title="Mở sẵn"><i class="bi bi-unlock"></i> 0</span>';
                 if (item.expRequire && item.expRequire > 0) {
-                    expRequireBadge = `<span class="badge bg-warning text-dark" title="Yêu cầu ${item.expRequire} EXP">
+                    expRequireBadge = `<span class="badge badge-lock" title="Yêu cầu ${item.expRequire} EXP">
                         <i class="bi bi-lock"></i> ${item.expRequire}
                     </span>`;
                 }
                 
                 tr.innerHTML = `
                     <td>${item.lessonId}</td>
-                    <td>${item.lessonTitle}</td>
-                    <td>${item.course ? item.course.courseName : '-'}</td>
-                    <td><span class="badge bg-secondary">${item.lessonOrder}</span></td>
+                    <td><strong>${item.lessonTitle}</strong></td>
+                    <td><span class="badge bg-info">${item.course ? item.course.courseName : '-'}</span></td>
+                    <td><span class="badge bg-secondary">Bài ${item.lessonOrder}</span></td>
                     <td>${expRequireBadge}</td>
-                    <td><span class="badge bg-primary">${item.expReward || 10}</span></td>
-                    <td>${item.durationMinutes || '-'}</td>
-                    <td>${item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td><span class="badge badge-reward"><i class="bi bi-star-fill"></i> ${item.expReward || 10}</span></td>
+                    <td><i class="bi bi-clock"></i> ${item.durationMinutes || '-'} phút</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" onclick="editData(${item.lessonId})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.lessonId})"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-warning" onclick="editData(${item.lessonId})" title="Sửa">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.lessonId})" title="Xóa">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(tr);

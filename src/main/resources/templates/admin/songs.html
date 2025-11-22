@@ -6,7 +6,32 @@
     <title>Quản lý Bài hát - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon { font-size: 2.5rem; opacity: 0.8; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-label { font-size: 0.9rem; opacity: 0.9; }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .song-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
     <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
@@ -18,27 +43,93 @@
             </div>
 
             <div class="col-md-10">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Quản lý Bài hát</h2>
-                    <button class="btn btn-primary" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Thêm bài hát</button>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-music-note-beamed"></i> Quản lý Bài hát</h2>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i class="bi bi-plus-circle"></i> Thêm bài hát
+                    </button>
                 </div>
 
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-music-note-list stat-icon"></i>
+                            <div class="stat-value" id="totalSongs">0</div>
+                            <div class="stat-label">Tổng Bài hát</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="bi bi-star-fill stat-icon"></i>
+                            <div class="stat-value" id="beginnerCount">0</div>
+                            <div class="stat-label">Beginner</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <i class="bi bi-star-half stat-icon"></i>
+                            <div class="stat-value" id="intermediateCount">0</div>
+                            <div class="stat-label">Intermediate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);">
+                            <i class="bi bi-rocket-takeoff-fill stat-icon"></i>
+                            <div class="stat-value" id="advancedCount">0</div>
+                            <div class="stat-label">Advanced</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-funnel"></i> Độ khó
+                            </label>
+                            <select class="form-select" id="filterDifficulty" onchange="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-sort-down"></i> Sắp xếp theo
+                            </label>
+                            <select class="form-select" id="sortBy" onchange="applyFilters()">
+                                <option value="songId">ID</option>
+                                <option value="popularityScore">Phổ biến</option>
+                                <option value="averageRating">Rating cao</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </label>
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="Tìm theo tiêu đề hoặc nghệ sĩ..." 
+                                   onkeyup="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-hover">
+                        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                             <tr>
-                                <th>ID</th>
+                                <th>Thumbnail</th>
                                 <th>Tiêu đề</th>
                                 <th>Nghệ sĩ</th>
                                 <th>Độ khó</th>
-                                <th>Thời lượng (s)</th>
-                                <th>Điểm phổ biến</th>
+                                <th>Thời lượng</th>
+                                <th>Phổ biến</th>
                                 <th>Rating</th>
-                                <th>Ngày tạo</th>
-                                <th>Thumbnail</th>
-                                <th>MIDI File</th>
-                                <th>Sheet Music</th>
-                                <th>Audio</th>
+                                <th>Files</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -143,6 +234,7 @@
         const API_URL = '/api/admin/songs';
         const token = localStorage.getItem('adminToken');
         let editMode = false;
+        let allSongs = [];
 
         if (!token) window.location.href = '/admin/login';
 
@@ -155,12 +247,48 @@
                     window.location.href = '/admin/login';
                     return;
                 }
-                const data = await response.json();
-                renderTable(data);
+                allSongs = await response.json();
+                updateStatistics();
+                applyFilters();
             } catch (error) {
                 console.error('Error:', error);
                 alert('Lỗi khi tải dữ liệu!');
             }
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalSongs').textContent = allSongs.length;
+            
+            const beginner = allSongs.filter(s => s.difficultyLevel === 'Beginner').length;
+            document.getElementById('beginnerCount').textContent = beginner;
+            
+            const intermediate = allSongs.filter(s => s.difficultyLevel === 'Intermediate').length;
+            document.getElementById('intermediateCount').textContent = intermediate;
+            
+            const advanced = allSongs.filter(s => s.difficultyLevel === 'Advanced').length;
+            document.getElementById('advancedCount').textContent = advanced;
+        }
+
+        function applyFilters() {
+            const difficultyFilter = document.getElementById('filterDifficulty').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allSongs.filter(song => {
+                const matchesDifficulty = !difficultyFilter || song.difficultyLevel === difficultyFilter;
+                const matchesSearch = !searchTerm || 
+                    song.songTitle.toLowerCase().includes(searchTerm) ||
+                    (song.artist && song.artist.toLowerCase().includes(searchTerm));
+                return matchesDifficulty && matchesSearch;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'popularityScore') return (b.popularityScore || 0) - (a.popularityScore || 0);
+                if (sortBy === 'averageRating') return (b.rating || 0) - (a.rating || 0);
+                return a.songId - b.songId;
+            });
+
+            renderTable(filtered);
         }
 
         function renderTable(data) {
@@ -168,22 +296,38 @@
             tbody.innerHTML = '';
             data.forEach(item => {
                 const tr = document.createElement('tr');
+                
+                const difficultyColor = {
+                    'Beginner': 'success',
+                    'Intermediate': 'warning',
+                    'Advanced': 'danger'
+                }[item.difficultyLevel] || 'secondary';
+                
+                const thumbnail = item.thumbnailUrl 
+                    ? `<img src="${item.thumbnailUrl}" class="song-thumbnail" alt="${item.songTitle}">`
+                    : '<div class="song-thumbnail bg-secondary d-flex align-items-center justify-content-center"><i class="bi bi-music-note"></i></div>';
+                
+                const files = [];
+                if (item.midiFileUrl) files.push('<span class="badge bg-primary" title="MIDI"><i class="bi bi-file-music"></i></span>');
+                if (item.sheetMusicUrl) files.push('<span class="badge bg-info" title="Sheet"><i class="bi bi-file-earmark-text"></i></span>');
+                if (item.audioUrl) files.push('<span class="badge bg-success" title="Audio"><i class="bi bi-volume-up"></i></span>');
+                
                 tr.innerHTML = `
-                    <td>${item.songId}</td>
-                    <td>${item.songTitle}</td>
+                    <td>${thumbnail}</td>
+                    <td><strong>${item.songTitle}</strong></td>
                     <td>${item.artist || '-'}</td>
-                    <td><span class="badge bg-success">${item.difficultyLevel || '-'}</span></td>
-                    <td>${item.durationSeconds || '-'}</td>
-                    <td>${item.popularityScore || 0}</td>
-                    <td><span class="badge bg-info">${item.rating || 0.0} ⭐</span></td>
-                    <td>${item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
-                    <td>${item.thumbnailUrl ? `<a href="${item.thumbnailUrl}" target="_blank">View</a>` : '-'}</td>
-                    <td>${item.midiFileUrl ? `<a href="${item.midiFileUrl}" target="_blank">Download</a>` : '-'}</td>
-                    <td>${item.sheetMusicUrl ? `<a href="${item.sheetMusicUrl}" target="_blank">View</a>` : '-'}</td>
-                    <td>${item.audioUrl ? `<a href="${item.audioUrl}" target="_blank">Play</a>` : '-'}</td>
+                    <td><span class="badge bg-${difficultyColor}">${item.difficultyLevel || '-'}</span></td>
+                    <td><i class="bi bi-clock"></i> ${item.durationSeconds || 0}s</td>
+                    <td><span class="badge bg-info">${item.popularityScore || 0}</span></td>
+                    <td><span class="badge bg-warning text-dark">⭐ ${item.rating || 0.0}</span></td>
+                    <td>${files.join(' ')}</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" onclick="editData(${item.songId})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.songId})"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-warning" onclick="editData(${item.songId})" title="Sửa">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.songId})" title="Xóa">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(tr);

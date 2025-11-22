@@ -3,6 +3,7 @@ package com.piano.learn.PianoLearn.entity.favorite;
 import java.time.LocalDateTime;
 
 import com.piano.learn.PianoLearn.entity.auth.User;
+import com.piano.learn.PianoLearn.entity.sheet.SheetMusic;
 import com.piano.learn.PianoLearn.entity.song.Song;
 
 import jakarta.persistence.Column;
@@ -14,7 +15,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -41,8 +41,9 @@ public class Favorite {
     @JoinColumn(name = "song_id", nullable = true)
     private Song song;
     
-    @Column(name = "sheet_id", nullable = true)
-    private Integer sheetId;
+    @ManyToOne
+    @JoinColumn(name = "sheet_id", nullable = true)
+    private SheetMusic sheetMusic;
     
     @Column(name = "added_at")
     private LocalDateTime addedAt;

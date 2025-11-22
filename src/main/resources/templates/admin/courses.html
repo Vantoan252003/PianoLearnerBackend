@@ -6,7 +6,41 @@
     <title>Quản lý Khóa học - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
-    
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon { font-size: 2.5rem; opacity: 0.8; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-label { font-size: 0.9rem; opacity: 0.9; }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .course-thumbnail {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .course-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+        .course-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transform: translateY(-3px);
+        }
+    </style>
 </head>
 <body>
     <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
@@ -18,28 +52,82 @@
             </div>
 
             <div class="col-md-10">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Quản lý Khóa học</h2>
-                    <button class="btn btn-primary" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Thêm khóa học</button>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-book-fill"></i> Quản lý Khóa học</h2>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i class="bi bi-plus-circle"></i> Thêm khóa học
+                    </button>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
-                            <tr>
-                                <th>ID</th>
-                                <th>Tên khóa học</th>
-                                <th>Mô tả</th>
-                                <th>Độ khó</th>
-                                <th>Số tuần</th>
-                                <th>Số bài học</th>
-                                <th>Ngày tạo</th>
-                                <th>Thao tác</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-book-fill stat-icon"></i>
+                            <div class="stat-value" id="totalCourses">0</div>
+                            <div class="stat-label">Tổng Khóa học</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="bi bi-star-fill stat-icon"></i>
+                            <div class="stat-value" id="beginnerCount">0</div>
+                            <div class="stat-label">Beginner</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <i class="bi bi-star-half stat-icon"></i>
+                            <div class="stat-value" id="intermediateCount">0</div>
+                            <div class="stat-label">Intermediate</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%);">
+                            <i class="bi bi-rocket-takeoff-fill stat-icon"></i>
+                            <div class="stat-value" id="advancedCount">0</div>
+                            <div class="stat-label">Advanced</div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-funnel"></i> Độ khó
+                            </label>
+                            <select class="form-select" id="filterDifficulty" onchange="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-sort-down"></i> Sắp xếp theo
+                            </label>
+                            <select class="form-select" id="sortBy" onchange="applyFilters()">
+                                <option value="courseId">ID</option>
+                                <option value="totalLessons">Số bài học</option>
+                                <option value="createAt">Mới nhất</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </label>
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="Tìm theo tên khóa học..." 
+                                   onkeyup="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cards Grid -->
+                <div class="row" id="coursesGrid"></div>
             </div>
         </div>
     </div>
@@ -110,6 +198,7 @@
         const API_URL = '/api/admin/courses';
         const token = localStorage.getItem('adminToken');
         let editMode = false;
+        let allCourses = [];
 
         if (!token) window.location.href = '/admin/login';
 
@@ -122,33 +211,94 @@
                     window.location.href = '/admin/login';
                     return;
                 }
-                const data = await response.json();
-                renderTable(data);
+                allCourses = await response.json();
+                updateStatistics();
+                applyFilters();
             } catch (error) {
                 console.error('Error:', error);
                 alert('Lỗi khi tải dữ liệu!');
             }
         }
 
-        function renderTable(data) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
+        function updateStatistics() {
+            document.getElementById('totalCourses').textContent = allCourses.length;
+            
+            const beginner = allCourses.filter(c => c.difficultyLevel === 'Beginner').length;
+            document.getElementById('beginnerCount').textContent = beginner;
+            
+            const intermediate = allCourses.filter(c => c.difficultyLevel === 'Intermediate').length;
+            document.getElementById('intermediateCount').textContent = intermediate;
+            
+            const advanced = allCourses.filter(c => c.difficultyLevel === 'Advanced').length;
+            document.getElementById('advancedCount').textContent = advanced;
+        }
+
+        function applyFilters() {
+            const difficultyFilter = document.getElementById('filterDifficulty').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allCourses.filter(course => {
+                const matchesDifficulty = !difficultyFilter || course.difficultyLevel === difficultyFilter;
+                const matchesSearch = !searchTerm || 
+                    course.courseName.toLowerCase().includes(searchTerm) ||
+                    (course.description && course.description.toLowerCase().includes(searchTerm));
+                return matchesDifficulty && matchesSearch;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'totalLessons') return (b.totalLessons || 0) - (a.totalLessons || 0);
+                if (sortBy === 'createAt') return new Date(b.createAt) - new Date(a.createAt);
+                return a.courseId - b.courseId;
+            });
+
+            renderCards(filtered);
+        }
+
+        function renderCards(data) {
+            const grid = document.getElementById('coursesGrid');
+            grid.innerHTML = '';
+            
             data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${item.courseId}</td>
-                    <td>${item.courseName}</td>
-                    <td>${item.description ? item.description.substring(0, 50) + '...' : '-'}</td>
-                    <td><span class="badge bg-info">${item.difficultyLevel || '-'}</span></td>
-                    <td>${item.durationWeeks || '-'}</td>
-                    <td>${item.totalLessons || 0}</td>
-                    <td>${item.createAt ? new Date(item.createAt).toLocaleDateString('vi-VN') : '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-warning" onclick="editData(${item.courseId})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.courseId})"><i class="bi bi-trash"></i></button>
-                    </td>
+                const difficultyColor = {
+                    'Beginner': 'success',
+                    'Intermediate': 'warning',
+                    'Advanced': 'danger'
+                }[item.difficultyLevel] || 'secondary';
+                
+                const thumbnail = item.thumbnailUrl || 'https://via.placeholder.com/300x200?text=No+Image';
+                
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-4';
+                col.innerHTML = `
+                    <div class="card course-card h-100">
+                        <img src="${thumbnail}" class="card-img-top" alt="${item.courseName}" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title">${item.courseName}</h5>
+                            <p class="card-text text-muted">${item.description ? item.description.substring(0, 100) + '...' : 'Không có mô tả'}</p>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-${difficultyColor}">${item.difficultyLevel || 'N/A'}</span>
+                                <small class="text-muted">
+                                    <i class="bi bi-journal-text"></i> ${item.totalLessons || 0} bài học
+                                </small>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> ${item.durationWeeks || 0} tuần
+                                </small>
+                                <div>
+                                    <button class="btn btn-sm btn-warning" onclick="editData(${item.courseId})" title="Sửa">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="deleteData(${item.courseId})" title="Xóa">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
-                tbody.appendChild(tr);
+                grid.appendChild(col);
             });
         }
 

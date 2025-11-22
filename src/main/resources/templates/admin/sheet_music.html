@@ -6,6 +6,32 @@
     <title>Quản lý Sheet Music - Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); }
+        .stat-icon { font-size: 2.5rem; opacity: 0.8; }
+        .stat-value { font-size: 2rem; font-weight: 700; margin: 0.5rem 0; }
+        .stat-label { font-size: 0.9rem; opacity: 0.9; }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .sheet-thumbnail {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+    </style>
 </head>
 <body>
     <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
@@ -13,31 +39,96 @@
     <div class="container-fluid mt-4">
         <div class="row">
             <div class="col-md-2">
-                <th:block th:replace="~{admin/parts/sidebar :: sidebar('sheet_music')}"></th:block>
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('sheet-music')}"></th:block>
             </div>
 
             <div class="col-md-10">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2>Quản lý Sheet Music</h2>
-                    <button class="btn btn-primary" onclick="openAddModal()"><i class="bi bi-plus-circle"></i> Thêm Sheet Music</button>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-file-earmark-music-fill"></i> Quản lý Sheet Music</h2>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i class="bi bi-plus-circle"></i> Thêm Sheet Music
+                    </button>
                 </div>
 
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-file-earmark-music stat-icon"></i>
+                            <div class="stat-value" id="totalSheets">0</div>
+                            <div class="stat-label">Tổng Sheet Music</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="bi bi-eye-fill stat-icon"></i>
+                            <div class="stat-value" id="totalViews">0</div>
+                            <div class="stat-label">Tổng Lượt xem</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <i class="bi bi-download stat-icon"></i>
+                            <div class="stat-value" id="totalDownloads">0</div>
+                            <div class="stat-label">Tổng Lượt tải</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="bi bi-globe stat-icon"></i>
+                            <div class="stat-value" id="publicSheets">0</div>
+                            <div class="stat-label">Công khai</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-funnel"></i> Độ khó
+                            </label>
+                            <select class="form-select" id="filterDifficulty" onchange="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">Intermediate</option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-sort-down"></i> Sắp xếp theo
+                            </label>
+                            <select class="form-select" id="sortBy" onchange="applyFilters()">
+                                <option value="sheetId">ID</option>
+                                <option value="viewCount">Lượt xem</option>
+                                <option value="downloadCount">Lượt tải</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </label>
+                            <input type="text" class="form-control" id="searchInput" 
+                                   placeholder="Tìm theo tiêu đề hoặc nhạc sĩ..." 
+                                   onkeyup="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
                 <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+                    <table class="table table-hover">
+                        <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                             <tr>
-                                <th>ID</th>
+                                <th>Thumbnail</th>
                                 <th>Tiêu đề</th>
                                 <th>Nhạc sĩ</th>
                                 <th>Độ khó</th>
-                                <th>Mô tả</th>
-                                <th>Thumbnail</th>
-                                <th>File</th>
                                 <th>Lượt xem</th>
                                 <th>Lượt tải</th>
-                                <th>Công khai</th>
-                                <th>Người tải</th>
-                                <th>Ngày tạo</th>
+                                <th>Trạng thái</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -139,6 +230,7 @@
         const API_URL = '/api/admin/sheet-music';
         const token = localStorage.getItem('adminToken');
         let editMode = false;
+        let allSheets = [];
 
         if (!token) window.location.href = '/admin/login';
 
@@ -151,35 +243,76 @@
                     window.location.href = '/admin/login';
                     return;
                 }
-                const data = await response.json();
-                renderTable(data);
+                allSheets = await response.json();
+                updateStatistics();
+                applyFilters();
             } catch (error) {
                 console.error('Error:', error);
                 alert('Lỗi khi tải dữ liệu!');
             }
         }
 
+        function updateStatistics() {
+            document.getElementById('totalSheets').textContent = allSheets.length;
+            
+            const totalViews = allSheets.reduce((sum, s) => sum + (s.viewCount || 0), 0);
+            document.getElementById('totalViews').textContent = totalViews;
+            
+            const totalDL = allSheets.reduce((sum, s) => sum + (s.downloadCount || 0), 0);
+            document.getElementById('totalDownloads').textContent = totalDL;
+            
+            const publicCount = allSheets.filter(s => s.isPublic).length;
+            document.getElementById('publicSheets').textContent = publicCount;
+        }
+
+        function applyFilters() {
+            const difficultyFilter = document.getElementById('filterDifficulty').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allSheets.filter(sheet => {
+                const matchesDifficulty = !difficultyFilter || sheet.difficultyLevel === difficultyFilter;
+                const matchesSearch = !searchTerm || 
+                    sheet.title.toLowerCase().includes(searchTerm) ||
+                    (sheet.composer && sheet.composer.toLowerCase().includes(searchTerm));
+                return matchesDifficulty && matchesSearch;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'viewCount') return (b.viewCount || 0) - (a.viewCount || 0);
+                if (sortBy === 'downloadCount') return (b.downloadCount || 0) - (a.downloadCount || 0);
+                return a.sheetId - b.sheetId;
+            });
+
+            renderTable(filtered);
+        }
+
         function renderTable(data) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
             data.forEach(item => {
+                const difficultyColor = {
+                    'Beginner': 'success',
+                    'Intermediate': 'warning',
+                    'Advanced': 'danger'
+                }[item.difficultyLevel] || 'secondary';
+                
+                const thumbnail = item.thumbnailUrl
+                    ? `<img src="${item.thumbnailUrl}" class="sheet-thumbnail" alt="${item.title}">`
+                    : '<div class="sheet-thumbnail bg-secondary d-flex align-items-center justify-content-center"><i class="bi bi-file-music"></i></div>';
+                
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td>${item.sheetId}</td>
-                    <td>${item.title}</td>
+                    <td>${thumbnail}</td>
+                    <td><strong>${item.title}</strong></td>
                     <td>${item.composer || '-'}</td>
-                    <td><span class="badge bg-success">${item.difficultyLevel || '-'}</span></td>
-                    <td>${item.description ? (item.description.length > 50 ? item.description.substring(0, 50) + '...' : item.description) : '-'}</td>
-                    <td>${item.thumbnailUrl ? `<a href="${item.thumbnailUrl}" target="_blank"><img src="${item.thumbnailUrl}" style="width:50px;height:50px;object-fit:cover;" /></a>` : '-'}</td>
-                    <td>${item.fileUrl ? `<a href="${item.fileUrl}" target="_blank"><i class="bi bi-file-earmark-pdf"></i> View</a>` : '-'}</td>
-                    <td>${item.viewCount || 0}</td>
-                    <td>${item.downloadCount || 0}</td>
-                    <td>${item.isPublic ? '<span class="badge bg-success">Có</span>' : '<span class="badge bg-secondary">Không</span>'}</td>
-                    <td>${item.uploadedBy || 'Admin'}</td>
-                    <td>${item.createdAt ? new Date(item.createdAt).toLocaleDateString('vi-VN') : '-'}</td>
+                    <td><span class="badge bg-${difficultyColor}">${item.difficultyLevel || '-'}</span></td>
+                    <td><span class="badge bg-info"><i class="bi bi-eye"></i> ${item.viewCount || 0}</span></td>
+                    <td><span class="badge bg-success"><i class="bi bi-download"></i> ${item.downloadCount || 0}</span></td>
+                    <td>${item.isPublic ? '<span class="badge bg-success">Công khai</span>' : '<span class="badge bg-secondary">Riêng tư</span>'}</td>
                     <td>
-                        <button class="btn btn-sm btn-warning" onclick="editData(${item.sheetId})"><i class="bi bi-pencil"></i></button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.sheetId})"><i class="bi bi-trash"></i></button>
+                        <button class="btn btn-sm btn-warning" onclick="editData(${item.sheetId})" title="Sửa"><i class="bi bi-pencil"></i></button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteData(${item.sheetId})" title="Xóa"><i class="bi bi-trash"></i></button>
                     </td>
                 `;
                 tbody.appendChild(tr);
