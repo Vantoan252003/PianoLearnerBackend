@@ -117,4 +117,9 @@ public class AdminViewController {
     public String showSheetMusic() {
         return "admin/sheet_music";
     }
+    
+    @GetMapping("/sheet-ratings")
+    public String showSheetRatings() {
+        return "admin/sheet_ratings";
+    }
 }

@@ -65,11 +65,24 @@ public class SheetMusic {
     @Builder.Default
     private Integer viewCount = 0;
 
+    @Column(name = "average_rating")
+    @Builder.Default
+    private Double averageRating = 0.0;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {
         if (createdAt == null) createdAt = LocalDateTime.now();
+    }
+    
+    // Alias method for compatibility
+    public void setRating(Double rating) {
+        this.averageRating = rating;
+    }
+    
+    public Double getRating() {
+        return this.averageRating;
     }
 }

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Đánh giá Sheet Music - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .sheet-card {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .sheet-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .rating-item {
+            border-left: 4px solid #198754;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('sheet-ratings')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-star-fill text-success"></i> Quản lý Đánh giá Sheet Music</h2>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-success" onclick="recalculateRatings()">
+                            <i class="bi bi-arrow-clockwise"></i> Cập nhật Rating
+                        </button>
+                        <input type="text" class="form-control" id="searchSheet" placeholder="🔍 Tìm sheet music..." style="width: 300px;">
+                    </div>
+                </div>
+
+                <!-- Sheet List -->
+                <div class="row" id="sheetList">
+                    <!-- Sheets will be loaded here -->
+                </div>
+
+                <!-- Ratings Detail Modal -->
+                <div class="modal fade" id="ratingsModal" tabindex="-1">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div>
+                                    <h5 class="modal-title" id="modalSheetTitle">Đánh giá sheet music</h5>
+                                    <p class="mb-0 text-muted">
+                                        <i class="bi bi-star-fill text-success"></i>
+                                        <span id="modalAvgRating">0.0</span> 
+                                        (<span id="modalTotalRatings">0</span> đánh giá)
+                                    </p>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <canvas id="ratingChart" width="300" height="200"></canvas>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Thống kê:</h6>
+                                        <ul class="list-unstyled">
+                                            <li>⭐⭐⭐⭐⭐ 5 sao: <span id="star5">0</span></li>
+                                            <li>⭐⭐⭐⭐ 4 sao: <span id="star4">0</span></li>
+                                            <li>⭐⭐⭐ 3 sao: <span id="star3">0</span></li>
+                                            <li>⭐⭐ 2 sao: <span id="star2">0</span></li>
+                                            <li>⭐ 1 sao: <span id="star1">0</span></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <hr>
+                                <h6>Danh sách đánh giá:</h6>
+                                <div id="ratingsList">
+                                    <!-- Ratings will be loaded here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const token = localStorage.getItem('adminToken');
+        let allSheets = [];
+        let currentChart = null;
+
+        if (!token) window.location.href = '/admin/login';
+
+        // Load all sheet music
+        async function loadSheets() {
+            try {
+                const response = await fetch('/api/admin/sheet-music', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+                allSheets = await response.json();
+                renderSheets(allSheets);
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        function renderSheets(sheets) {
+            const sheetList = document.getElementById('sheetList');
+            sheetList.innerHTML = '';
+            
+            if (sheets.length === 0) {
+                sheetList.innerHTML = '<div class="col-12"><p class="text-center text-muted">Không tìm thấy sheet music nào</p></div>';
+                return;
+            }
+
+            sheets.forEach(sheet => {
+                const col = document.createElement('div');
+                col.className = 'col-md-4 mb-4';
+                col.innerHTML = `
+                    <div class="card sheet-card h-100" onclick="viewRatings(${sheet.sheetId}, '${(sheet.title || '').replace(/'/g, "\\'")}')">
+                        <div class="card-body">
+                            <h5 class="card-title">${sheet.title}</h5>
+                            <p class="card-text text-muted">${sheet.composer || 'Unknown Composer'}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="badge bg-success">${sheet.difficultyLevel || 'N/A'}</span>
+                                </div>
+                                <div>
+                                    <i class="bi bi-star-fill text-success"></i>
+                                    <strong>${sheet.rating ? sheet.rating.toFixed(1) : '0.0'}</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                sheetList.appendChild(col);
+            });
+        }
+
+        // Search functionality
+        document.getElementById('searchSheet').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = allSheets.filter(sheet => 
+                sheet.title.toLowerCase().includes(searchTerm) ||
+                (sheet.composer && sheet.composer.toLowerCase().includes(searchTerm))
+            );
+            renderSheets(filtered);
+        });
+
+        // View ratings for a sheet
+        async function viewRatings(sheetId, sheetTitle) {
+            try {
+                const response = await fetch(`/api/admin/sheet-ratings/sheet/${sheetId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const ratings = await response.json();
+                
+                // Update modal title
+                document.getElementById('modalSheetTitle').textContent = sheetTitle;
+                
+                // Calculate statistics
+                const totalRatings = ratings.length;
+                const avgRating = totalRatings > 0 
+                    ? (ratings.reduce((sum, r) => sum + r.rating, 0) / totalRatings).toFixed(1)
+                    : '0.0';
+                
+                document.getElementById('modalAvgRating').textContent = avgRating;
+                document.getElementById('modalTotalRatings').textContent = totalRatings;
+                
+                // Count stars
+                const starCounts = [0, 0, 0, 0, 0];
+                ratings.forEach(r => {
+                    const starIndex = Math.floor(r.rating) - 1;
+                    if (starIndex >= 0 && starIndex < 5) {
+                        starCounts[starIndex]++;
+                    }
+                });
+                
+                for (let i = 0; i < 5; i++) {
+                    document.getElementById(`star${i + 1}`).textContent = starCounts[i];
+                }
+                
+                // Draw chart
+                drawChart(starCounts);
+                
+                // Render ratings list
+                renderRatingsList(ratings);
+                
+                // Show modal
+                new bootstrap.Modal(document.getElementById('ratingsModal')).show();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải ratings!');
+            }
+        }
+
+        function drawChart(starCounts) {
+            const ctx = document.getElementById('ratingChart').getContext('2d');
+            
+            if (currentChart) {
+                currentChart.destroy();
+            }
+            
+            currentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['1 ⭐', '2 ⭐', '3 ⭐', '4 ⭐', '5 ⭐'],
+                    datasets: [{
+                        label: 'Số lượng đánh giá',
+                        data: starCounts,
+                        backgroundColor: 'rgba(67, 233, 123, 0.6)',
+                        borderColor: 'rgba(67, 233, 123, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRatingsList(ratings) {
+            const ratingsList = document.getElementById('ratingsList');
+            ratingsList.innerHTML = '';
+            
+            if (ratings.length === 0) {
+                ratingsList.innerHTML = '<p class="text-center text-muted">Chưa có đánh giá nào</p>';
+                return;
+            }
+            
+            ratings.forEach(rating => {
+                const ratingItem = document.createElement('div');
+                ratingItem.className = 'rating-item';
+                ratingItem.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="d-flex gap-3">
+                            <div class="user-avatar">
+                                ${rating.username ? rating.username.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <div>
+                                <strong>${rating.username || 'Unknown User'}</strong>
+                                <small class="text-muted d-block">${rating.userEmail || ''}</small>
+                                <div class="mt-1">
+                                    ${generateStars(rating.rating)}
+                                    <span class="text-warning fw-bold">${rating.rating.toFixed(1)}</span>
+                                </div>
+                                ${rating.comment ? `<p class="mt-2 mb-0">${rating.comment}</p>` : ''}
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i> 
+                                    ${new Date(rating.createdAt).toLocaleString('vi-VN')}
+                                </small>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="deleteRating(${rating.sheetRatingId}, ${rating.sheetId}, '${(rating.sheetTitle || '').replace(/'/g, "\\'")}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                `;
+                ratingsList.appendChild(ratingItem);
+            });
+        }
+
+        function generateStars(rating) {
+            const fullStars = Math.floor(rating);
+            let stars = '';
+            for (let i = 0; i < fullStars; i++) {
+                stars += '<i class="bi bi-star-fill text-warning"></i>';
+            }
+            for (let i = fullStars; i < 5; i++) {
+                stars += '<i class="bi bi-star text-warning"></i>';
+            }
+            return stars;
+        }
+
+        async function deleteRating(ratingId, sheetId, sheetTitle) {
+            if (!confirm('Bạn có chắc chắn muốn xóa đánh giá này?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/sheet-ratings/${ratingId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    alert('Xóa thành công!');
+                    // Reload ratings for current sheet
+                    viewRatings(sheetId, sheetTitle);
+                    // Reload sheet list
+                    loadSheets();
+                } else {
+                    alert('Lỗi khi xóa!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi xóa!');
+            }
+        }
+
+        async function recalculateRatings() {
+            if (!confirm('Cập nhật lại tất cả rating? Quá trình này có thể mất vài giây.')) return;
+            
+            try {
+                const response = await fetch('/api/admin/sheet-ratings/recalculate-all', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const message = await response.text();
+                    alert(message);
+                    loadSheets();
+                } else {
+                    alert('Lỗi khi cập nhật!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi cập nhật!');
+            }
+        }
+
+        loadSheets();
+    </script>
+</body>
+</html>
