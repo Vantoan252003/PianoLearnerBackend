@@ -409,4 +409,47 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
+    @PostMapping("/update-level")
+    public ResponseEntity<?> updateLevel() {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userService.findUserByEmail(userDetails.getUsername());
+
+            Integer exp = user.getTotalExp();
+            String newLevel = "Beginner";
+            if (exp >= 200) {
+                newLevel = "Advanced";
+            } else if (exp >= 100) {
+                newLevel = "Intermediate";
+            }
+
+            boolean levelUpdated = false;
+            if (!newLevel.equals(user.getLevelName())) {
+                userService.checkAndUpdateLevelBasedOnExp(user.getUserId());
+                levelUpdated = true;
+            }
+            User updatedUser = userService.findUserByEmail(userDetails.getUsername());
+
+            Map<String, String> response = new HashMap<>();
+            String message = levelUpdated ? "Cập nhật level thành công" : "Không cần cập nhật level";
+            response.put("message", message);
+            response.put("levelName", updatedUser.getLevelName());
+            response.put("exp", String.valueOf(updatedUser.getTotalExp()));
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
 }

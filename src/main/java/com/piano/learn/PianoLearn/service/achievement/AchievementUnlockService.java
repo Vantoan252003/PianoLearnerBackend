@@ -1,5 +1,6 @@
 package com.piano.learn.PianoLearn.service.achievement;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,9 +26,11 @@ public class AchievementUnlockService {
     @Autowired
     private UserService userService;
 
-    public void checkAndUnlockAchievements(Integer userId) {
+    public List<UserAchievement> checkAndUnlockAchievements(Integer userId) {
         List<Achievement> allAchievements = achievementService.getAllAchievements();
         UserDetailResponse userDetail = userService.getUserDetailInfo(userId);
+
+        List<UserAchievement> newUnlocked = new ArrayList<>();
 
         for (Achievement ach : allAchievements) {
             boolean alreadyUnlocked = userAchievementService.getUserAchievementsByUserId(userId)
@@ -41,8 +44,10 @@ public class AchievementUnlockService {
                 userAchievementService.createUserAchievement(ua);
                 // Cập nhật EXP cho user
                 userService.addExp(userId, ach.getExpReward());
+                newUnlocked.add(ua);
             }
         }
+        return newUnlocked;
     }
 
     private boolean meetsRequirement(UserDetailResponse user, Achievement ach, Integer userId) {

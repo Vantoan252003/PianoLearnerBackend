@@ -245,5 +245,45 @@ public class UserService implements UserDetailsService {
         }
         return true;
     }
+    
+    public User updateLevel(Integer userId, String levelName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setLevelName(levelName);
+        return userRepository.save(user);
+    }
+
+    public List<UserDetailResponse.UserAchievementInfo> getUserAchievements(Integer userId) {
+        List<UserAchievement> userAchievements = userAchievementRepository.findByUser_UserId(userId);
+        return userAchievements.stream()
+            .map(ua -> UserDetailResponse.UserAchievementInfo.builder()
+                .userAchievementId(ua.getUserAchievementId())
+                .achievementId(ua.getAchievement().getAchievementId())
+                .achievementName(ua.getAchievement().getAchievementName())
+                .description(ua.getAchievement().getDescription())
+                .iconUrl(ua.getAchievement().getIconUrl())
+                .requirementType(ua.getAchievement().getRequirementType())
+                .requirementValue(ua.getAchievement().getRequirementValue())
+                .expReward(ua.getAchievement().getExpReward())
+                .unlockedAt(ua.getUnlockedAt())
+                .build())
+            .collect(Collectors.toList());
+    }
+
+    public void checkAndUpdateLevelBasedOnExp(Integer userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        Integer exp = user.getTotalExp();
+        String newLevel = "Beginner";
+        if (exp >= 200) {
+            newLevel = "Advanced";
+        } else if (exp >= 100) {
+            newLevel = "Intermediate";
+        }
+        if (!newLevel.equals(user.getLevelName())) {
+            user.setLevelName(newLevel);
+            userRepository.save(user);
+        }
+    }
 
 }
