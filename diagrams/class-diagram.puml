@@ -1,0 +1,229 @@
+@startuml PianoLearn Class Diagram
+
+' Styling
+skinparam classAttributeIconSize 0
+skinparam class {
+    BackgroundColor LightYellow
+    BorderColor Black
+    ArrowColor Black
+}
+
+' Core Entities
+class User {
+    + userId: Integer <<PK>>
+    + fullName: String
+    + email: String <<unique>>
+    + passwordHash: String
+    + role: Role (learner/admin)
+    + avatarUrl: String
+    + levelName: String
+    + totalExp: Integer
+    + streakDays: Integer
+    + createdAt: LocalDateTime
+    + lastPracticeDate: LocalDateTime
+    + lastLogin: LocalDateTime
+}
+
+class Courses {
+    + courseId: Integer <<PK>>
+    + courseName: String
+    + description: String
+    + thumbnailUrl: String
+    + difficultyLevel: String
+    + durationWeeks: Integer
+    + totalLessons: Integer
+    + createAt: LocalDateTime
+}
+
+class Lesson {
+    + lessonId: Integer <<PK>>
+    + courseId: Integer <<FK>>
+    + lessonTitle: String
+    + lessonOrder: Integer
+    + description: String
+    + videoUrl: String
+    + sheetMusicUrl: String
+    + durationMinutes: Integer
+    + expReward: Integer
+    + createdAt: LocalDateTime
+}
+
+class Exercise {
+    + exerciseId: Integer <<PK>>
+    + lessonId: Integer <<FK>>
+    + exerciseTitle: String
+    + exerciseType: String
+    + difficulty: String
+    + description: String
+    + instructions: String
+    + createdAt: LocalDateTime
+}
+
+class Song {
+    + songId: Integer <<PK>>
+    + songTitle: String
+    + artist: String
+    + difficultyLevel: String
+    + durationSeconds: Integer
+    + thumbnailUrl: String
+    + midiFileUrl: String
+    + sheetMusicUrl: String
+    + createdAt: LocalDateTime
+}
+
+class SheetMusic {
+    + sheetId: Integer <<PK>>
+    + uploadedBy: Integer <<FK>>
+    + title: String
+    + composer: String
+    + description: String
+    + difficultyLevel: String
+    + downloadCount: Integer
+    + pdfUrl: String
+    + thumbnailUrl: String
+    + isPublic: Boolean
+    + createdAt: LocalDateTime
+}
+
+class Achievement {
+    + achievementId: Integer <<PK>>
+    + achievementName: String
+    + description: String
+    + iconUrl: String
+    + requirementType: String
+    + requirementValue: Integer
+    + expReward: Integer
+}
+
+class PianoQuestion {
+    + questionId: Long <<PK>>
+    + lessonId: Integer <<FK>>
+    + questionText: String
+    + difficulty: String
+    + createdAt: LocalDateTime
+}
+
+' Junction/Relationship Tables
+class UserProgress {
+    + progressId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + lessonId: Integer <<FK>>
+    + isCompleted: Boolean
+    + completionPercentage: Integer
+    + lastAccessed: LocalDateTime
+    --
+    <<unique>> (userId, lessonId)
+}
+
+class UserAchievement {
+    + userAchievementId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + achievementId: Integer <<FK>>
+    + unlockedAt: LocalDateTime
+    --
+    <<unique>> (userId, achievementId)
+}
+
+class ExerciseResult {
+    + resultId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + exerciseId: Integer <<FK>>
+    + score: Integer
+    + accuracyPercent: BigDecimal
+    + attemptedAt: LocalDateTime
+}
+
+class PracticeSession {
+    + sessionId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + songId: Integer <<FK>> [nullable]
+    + exerciseId: Integer <<FK>> [nullable]
+    + practiceDurationMinutes: Integer
+    + notesPlayed: Integer
+    + accuracy: BigDecimal
+    + sessionDate: LocalDate
+}
+
+class DailyGoal {
+    + goalId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + goalDate: LocalDate
+    + checkedInAt: LocalDateTime
+    --
+    <<unique>> (userId, goalDate)
+}
+
+class Favorite {
+    + favoriteId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + songId: Integer <<FK>> [nullable]
+    + sheetId: Integer <<FK>> [nullable]
+    + createdAt: LocalDateTime
+}
+
+class SongRating {
+    + songRatingId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + songId: Integer <<FK>>
+    + rating: Double (0.0-5.0)
+    + comment: String
+    + createdAt: LocalDateTime
+}
+
+class SheetRating {
+    + sheetRatingId: Integer <<PK>>
+    + userId: Integer <<FK>>
+    + sheetId: Integer <<FK>>
+    + rating: Double (0.0-5.0)
+    + comment: String
+    + createdAt: LocalDateTime
+}
+
+' Relationships - One to Many
+Courses "1" -- "many" Lesson : contains >
+Lesson "1" -- "many" Exercise : has >
+Lesson "1" -- "many" PianoQuestion : includes >
+
+User "1" -- "many" SheetMusic : uploads >
+User "1" -- "many" UserProgress : tracks >
+User "1" -- "many" UserAchievement : earns >
+User "1" -- "many" ExerciseResult : submits >
+User "1" -- "many" PracticeSession : performs >
+User "1" -- "many" DailyGoal : sets >
+User "1" -- "many" Favorite : creates >
+User "1" -- "many" SongRating : rates >
+User "1" -- "many" SheetRating : rates >
+
+Lesson "1" -- "many" UserProgress : tracked by >
+Achievement "1" -- "many" UserAchievement : unlocked as >
+Exercise "1" -- "many" ExerciseResult : produces >
+
+Song "1" -- "many" PracticeSession : practiced in >
+Exercise "1" -- "many" PracticeSession : practiced in >
+Song "1" -- "many" Favorite : favorited as >
+SheetMusic "1" -- "many" Favorite : favorited as >
+Song "1" -- "many" SongRating : rated in >
+SheetMusic "1" -- "many" SheetRating : rated in >
+
+' Notes
+note right of Favorite
+  Either songId OR sheetId 
+  must be set (not both)
+end note
+
+note right of PracticeSession
+  Either songId OR exerciseId 
+  can be set
+end note
+
+note bottom of UserProgress
+  Many-to-Many relationship
+  between User and Lesson
+end note
+
+note bottom of UserAchievement
+  Many-to-Many relationship
+  between User and Achievement
+end note
+
+@enduml

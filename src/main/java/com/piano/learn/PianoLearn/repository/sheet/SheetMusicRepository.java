@@ -31,4 +31,7 @@ public interface SheetMusicRepository extends JpaRepository<SheetMusic, Integer>
     );
     
     List<SheetMusic> findByIsPublicTrue();
+    
+    // Tìm tất cả sheet music của một user
+    List<SheetMusic> findByUploadedBy_UserId(Integer userId);
 }

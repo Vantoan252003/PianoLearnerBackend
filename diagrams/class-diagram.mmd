@@ -1,0 +1,209 @@
+---
+title: PianoLearn Class Diagram
+---
+classDiagram
+    %% Core Entities
+    class User {
+        +Integer userId PK
+        +String fullName
+        +String email (unique)
+        +String passwordHash
+        +Role role
+        +String avatarUrl
+        +String levelName
+        +Integer totalExp
+        +Integer streakDays
+        +LocalDateTime createdAt
+        +LocalDateTime lastPracticeDate
+        +LocalDateTime lastLogin
+    }
+
+    class Courses {
+        +Integer courseId PK
+        +String courseName
+        +String description
+        +String thumbnailUrl
+        +String difficultyLevel
+        +Integer durationWeeks
+        +Integer totalLessons
+        +LocalDateTime createAt
+    }
+
+    class Lesson {
+        +Integer lessonId PK
+        +Integer courseId FK
+        +String lessonTitle
+        +Integer lessonOrder
+        +String description
+        +String videoUrl
+        +String sheetMusicUrl
+        +Integer durationMinutes
+        +Integer expReward
+        +LocalDateTime createdAt
+    }
+
+    class Exercise {
+        +Integer exerciseId PK
+        +Integer lessonId FK
+        +String exerciseTitle
+        +String exerciseType
+        +String difficulty
+        +String description
+        +String instructions
+        +LocalDateTime createdAt
+    }
+
+    class Song {
+        +Integer songId PK
+        +String songTitle
+        +String artist
+        +String difficultyLevel
+        +Integer durationSeconds
+        +String thumbnailUrl
+        +String midiFileUrl
+        +String sheetMusicUrl
+        +LocalDateTime createdAt
+    }
+
+    class SheetMusic {
+        +Integer sheetId PK
+        +Integer uploadedBy FK
+        +String title
+        +String composer
+        +String description
+        +String difficultyLevel
+        +Integer downloadCount
+        +String pdfUrl
+        +String thumbnailUrl
+        +Boolean isPublic
+        +LocalDateTime createdAt
+    }
+
+    class Achievement {
+        +Integer achievementId PK
+        +String achievementName
+        +String description
+        +String iconUrl
+        +String requirementType
+        +Integer requirementValue
+        +Integer expReward
+    }
+
+    class PianoQuestion {
+        +Long questionId PK
+        +Integer lessonId FK
+        +String questionText
+        +String difficulty
+        +LocalDateTime createdAt
+    }
+
+    %% Junction/Relationship Tables
+    class UserProgress {
+        +Integer progressId PK
+        +Integer userId FK
+        +Integer lessonId FK
+        +Boolean isCompleted
+        +Integer completionPercentage
+        +LocalDateTime lastAccessed
+        ---
+        unique(userId, lessonId)
+    }
+
+    class UserAchievement {
+        +Integer userAchievementId PK
+        +Integer userId FK
+        +Integer achievementId FK
+        +LocalDateTime unlockedAt
+        ---
+        unique(userId, achievementId)
+    }
+
+    class ExerciseResult {
+        +Integer resultId PK
+        +Integer userId FK
+        +Integer exerciseId FK
+        +Integer score
+        +BigDecimal accuracyPercent
+        +LocalDateTime attemptedAt
+    }
+
+    class PracticeSession {
+        +Integer sessionId PK
+        +Integer userId FK
+        +Integer songId FK (nullable)
+        +Integer exerciseId FK (nullable)
+        +Integer practiceDurationMinutes
+        +Integer notesPlayed
+        +BigDecimal accuracy
+        +LocalDate sessionDate
+    }
+
+    class DailyGoal {
+        +Integer goalId PK
+        +Integer userId FK
+        +LocalDate goalDate
+        +LocalDateTime checkedInAt
+        ---
+        unique(userId, goalDate)
+    }
+
+    class Favorite {
+        +Integer favoriteId PK
+        +Integer userId FK
+        +Integer songId FK (nullable)
+        +Integer sheetId FK (nullable)
+        +LocalDateTime createdAt
+    }
+
+    class SongRating {
+        +Integer songRatingId PK
+        +Integer userId FK
+        +Integer songId FK
+        +Double rating (0.0-5.0)
+        +String comment
+        +LocalDateTime createdAt
+    }
+
+    class SheetRating {
+        +Integer sheetRatingId PK
+        +Integer userId FK
+        +Integer sheetId FK
+        +Double rating (0.0-5.0)
+        +String comment
+        +LocalDateTime createdAt
+    }
+
+    %% Relationships - One to Many
+    Courses "1" --> "0..*" Lesson : contains
+    Lesson "1" --> "0..*" Exercise : has
+    Lesson "1" --> "0..*" PianoQuestion : includes
+    
+    User "1" --> "0..*" SheetMusic : uploads
+    User "1" --> "0..*" UserProgress : tracks
+    User "1" --> "0..*" UserAchievement : earns
+    User "1" --> "0..*" ExerciseResult : submits
+    User "1" --> "0..*" PracticeSession : performs
+    User "1" --> "0..*" DailyGoal : sets
+    User "1" --> "0..*" Favorite : creates
+    User "1" --> "0..*" SongRating : rates
+    User "1" --> "0..*" SheetRating : rates
+    
+    Lesson "1" --> "0..*" UserProgress : tracked by
+    Achievement "1" --> "0..*" UserAchievement : unlocked as
+    Exercise "1" --> "0..*" ExerciseResult : produces
+    
+    Song "1" --> "0..*" PracticeSession : practiced in
+    Exercise "1" --> "0..*" PracticeSession : practiced in
+    Song "1" --> "0..*" Favorite : favorited as
+    SheetMusic "1" --> "0..*" Favorite : favorited as
+    Song "1" --> "0..*" SongRating : rated in
+    SheetMusic "1" --> "0..*" SheetRating : rated in
+
+    %% Many-to-Many through junction tables
+    User "0..*" --> "0..*" Lesson : via UserProgress
+    User "0..*" --> "0..*" Achievement : via UserAchievement
+
+    note for Favorite "Either songId OR sheetId must be set (not both)"
+    note for PracticeSession "Either songId OR exerciseId can be set"
+    note for UserProgress "Many-to-Many: User ↔ Lesson"
+    note for UserAchievement "Many-to-Many: User ↔ Achievement"

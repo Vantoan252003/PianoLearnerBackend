@@ -311,6 +311,9 @@
                     <td><span class="badge bg-success"><i class="bi bi-download"></i> ${item.downloadCount || 0}</span></td>
                     <td>${item.isPublic ? '<span class="badge bg-success">Công khai</span>' : '<span class="badge bg-secondary">Riêng tư</span>'}</td>
                     <td>
+                        <button class="btn btn-sm btn-info" onclick="downloadSheet(${item.sheetId}, '${item.title}')" title="Tải xuống">
+                            <i class="bi bi-download"></i>
+                        </button>
                         <button class="btn btn-sm btn-warning" onclick="editData(${item.sheetId})" title="Sửa"><i class="bi bi-pencil"></i></button>
                         <button class="btn btn-sm btn-danger" onclick="deleteData(${item.sheetId})" title="Xóa"><i class="bi bi-trash"></i></button>
                     </td>
@@ -423,6 +426,31 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Lỗi khi xóa dữ liệu!');
+            }
+        }
+
+        async function downloadSheet(id, title) {
+            try {
+                const response = await fetch(`/api/auth/sheet-music/download/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `${title}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    alert('Lỗi khi tải file!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải file!');
             }
         }
 
