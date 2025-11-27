@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đóng Góp Của Tôi - PianoLearn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .contribution-card {
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .contribution-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .feedback-section {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{layouts/layout_home :: layout}"></div>
+
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="mb-4"><i class="bi bi-chat-quote-fill"></i> Đóng Góp Của Tôi</h2>
+
+                <!-- Success Message -->
+                <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill"></i> <span th:text="${successMessage}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Submit Form -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-plus-circle"></i> Gửi Đóng Góp Mới</h5>
+                    </div>
+                    <div class="card-body">
+                        <form action="/api/contributions" method="post">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Tiêu đề</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="content" class="form-label">Nội dung đóng góp</label>
+                                <textarea class="form-control" id="content" name="content" rows="5" required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-send"></i> Gửi đóng góp
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Contributions List -->
+                <div th:if="${contributions != null and !contributions.empty}">
+                    <h4 class="mb-3">Lịch Sử Đóng Góp</h4>
+                    <div th:each="contribution : ${contributions}" class="contribution-card">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 th:text="${contribution.title}">Tiêu đề</h5>
+                                <small class="text-muted">
+                                    <i class="bi bi-calendar"></i> 
+                                    <span th:text="${#temporals.format(contribution.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                </small>
+                            </div>
+                            <span th:classappend="'badge ' + ${contribution.status == 'approved' ? 'bg-success' : contribution.status == 'rejected' ? 'bg-danger' : 'bg-warning'}"
+                                  class="status-badge">
+                                <span th:text="${contribution.status == 'approved' ? 'Đã duyệt' : contribution.status == 'rejected' ? 'Từ chối' : 'Chờ duyệt'}"></span>
+                            </span>
+                        </div>
+                        <p th:text="${contribution.content}" class="mb-3"></p>
+                        <div th:if="${contribution.adminFeedback != null and !contribution.adminFeedback.isEmpty()}" class="feedback-section">
+                            <h6><i class="bi bi-chat-dots"></i> Phản hồi từ Admin:</h6>
+                            <p th:text="${contribution.adminFeedback}" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div th:if="${contributions == null or contributions.empty}" class="text-center mt-5">
+                    <i class="bi bi-chat-quote text-muted" style="font-size: 3rem;"></i>
+                    <h4 class="text-muted mt-3">Chưa có đóng góp nào</h4>
+                    <p class="text-muted">Hãy gửi đóng góp đầu tiên của bạn!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

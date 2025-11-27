@@ -29,19 +29,30 @@ import com.piano.learn.PianoLearn.entity.sheet.SheetMusic;
 import com.piano.learn.PianoLearn.repository.sheet.SheetMusicRepository;
 import com.piano.learn.PianoLearn.service.UploadService;
 import com.piano.learn.PianoLearn.service.UserService;
+import com.piano.learn.PianoLearn.service.ai.SheetMusicDetectionService;
+import com.piano.learn.PianoLearn.service.ai.SheetMusicDetectionService.SheetValidationResult;
 
 @RestController
 @RequestMapping("/api/auth/sheet-music")
 public class SheetMusicController {
     
     @Autowired
-    private SheetMusicRepository sheetMusicRepository;
-    
-    @Autowired
     private UploadService uploadService;
     
     @Autowired
+    private SheetMusicRepository sheetMusicRepository;
+
+    @Autowired
     private UserService userService;
+    
+    @Autowired
+    private SheetMusicDetectionService sheetMusicDetectionService;
+    
+    // Các extension được chấp nhận
+    private static final String[] ALLOWED_EXTENSIONS = {
+        ".pdf", ".jpg", ".jpeg", ".png", ".mxl", ".musicxml", ".xml"
+    };
+
     
     /**
      * GET /api/sheet-music - Lấy tất cả sheet music công khai
@@ -72,7 +83,10 @@ public class SheetMusicController {
     
     /**
      * POST /api/sheet-music - Upload sheet music
-     * multipart form-data: file, title, composer (optional), description (optional), difficultyLevel (optional)
+     * Hỗ trợ: PDF, ảnh (JPG/PNG), MXL/MusicXML
+     * - PDF: Convert sang ảnh → gọi Hugging Face API để check
+     * - Ảnh: Gọi Hugging Face API để check trực tiếp
+     * - MXL/MusicXML: Cho qua luôn (định dạng nhạc chuyên dụng)
      */
     @PostMapping
     public ResponseEntity<?> uploadSheetMusic(
@@ -83,15 +97,62 @@ public class SheetMusicController {
             @RequestParam(value = "difficultyLevel", required = false) String difficultyLevel
     ) throws IOException {
         
-        // Upload file to cloud storage
-        String fileUrl = uploadService.uploadSong(file);
+        String originalFilename = file.getOriginalFilename();
+        String fileExtension = originalFilename != null ? 
+            originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase() : "";
         
-        // Get current user
+        boolean isAllowedExtension = false;
+        for (String ext : ALLOWED_EXTENSIONS) {
+            if (fileExtension.equals(ext)) {
+                isAllowedExtension = true;
+                break;
+            }
+        }
+        
+        if (!isAllowedExtension) {
+            return ResponseEntity.badRequest().body(
+                java.util.Map.of(
+                    "error", "INVALID_FILE_TYPE",
+                    "message", "Chỉ chấp nhận file PDF, ảnh (JPG/PNG), hoặc MusicXML (.mxl)"
+                )
+            );
+        }
+        
+        boolean isMusicXmlFile = fileExtension.equals(".mxl") || 
+                                  fileExtension.equals(".musicxml") || 
+                                  fileExtension.equals(".xml");
+        
+        String fileUrl;
+        
+        if (isMusicXmlFile) {
+            fileUrl = uploadService.uploadSong(file);
+        } else {
+            String contentType = file.getContentType();
+            SheetValidationResult validationResult;
+            
+            if (contentType != null && contentType.equals("application/pdf")) {
+                validationResult = sheetMusicDetectionService.validatePdfSheetMusic(file);
+            } else {
+                validationResult = sheetMusicDetectionService.validateImageSheetMusic(file);
+            }
+            
+            if (!validationResult.isValid()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    java.util.Map.of(
+                        "error", "INVALID_SHEET_MUSIC",
+                        "message", validationResult.getMessage(),
+                        "musicNotesDetected", validationResult.getMusicNotesCount()
+                    )
+                );
+            }
+            
+            fileUrl = uploadService.uploadSong(file);
+        }
+        
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         User user = userService.findUserByEmail(email);
         
-        // Create sheet music
         SheetMusic sheetMusic = SheetMusic.builder()
                 .title(title)
                 .composer(composer)
@@ -144,13 +205,6 @@ public class SheetMusicController {
         return ResponseEntity.ok("Sheet music deleted successfully");
     }
     
-    /**
-     * GET /api/auth/sheet-music/stream/{id} - Proxy stream PDF từ Cloudinary
-     * Endpoint này giúp:
-     * - Bảo mật: Client không cần biết Cloudinary URL
-     * - Kiểm soát quyền: Verify user trước khi cho xem
-     * - Tracking: Có thể log/count views
-     */
     @GetMapping("/stream/{id}")
     public ResponseEntity<InputStreamResource> streamSheetMusic(@PathVariable Integer id) {
         try {
@@ -178,13 +232,12 @@ public class SheetMusicController {
             sheet.setViewCount((sheet.getViewCount() != null ? sheet.getViewCount() : 0) + 1);
             sheetMusicRepository.save(sheet);
             
-            // Lấy file từ Cloudinary
+            // Lấy file từ Cloudinary (secure_url đã được lưu khi upload)
             String fileUrl = sheet.getFileUrl();
             if (fileUrl == null || fileUrl.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
             
-            // Tạo connection đến Cloudinary
             URL url = new URL(fileUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -245,12 +298,13 @@ public class SheetMusicController {
             sheet.setDownloadCount((sheet.getDownloadCount() != null ? sheet.getDownloadCount() : 0) + 1);
             sheetMusicRepository.save(sheet);
             
-            // Stream file
+            // Stream file (secure_url đã được lưu khi upload)
             String fileUrl = sheet.getFileUrl();
             if (fileUrl == null || fileUrl.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
             
+            // Sử dụng trực tiếp secure_url đã lưu trong DB
             URL url = new URL(fileUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -276,4 +330,5 @@ public class SheetMusicController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+    
 }

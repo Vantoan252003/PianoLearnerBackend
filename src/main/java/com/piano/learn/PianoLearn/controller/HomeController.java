@@ -35,5 +35,10 @@ public class HomeController {
     public String contact() {
         return "contact";
     }
+    
+    @GetMapping("/contribution")
+    public String contribution() {
+        return "contribution";
+    }
 }
 

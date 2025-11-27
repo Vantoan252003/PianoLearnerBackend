@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Đóng Góp Người Dùng - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        .stat-card {
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            border: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            opacity: 0.8;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .filter-section {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
+        }
+        .contribution-card {
+            border: 1px solid #ddd;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fff;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            transition: transform 0.3s;
+        }
+        .contribution-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        .contribution-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .user-info {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 1.1rem;
+        }
+        .date-info {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .content-preview {
+            margin: 15px 0;
+            max-height: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.6;
+            color: #555;
+        }
+        .action-buttons {
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+        }
+        .table-responsive {
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .table thead th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            font-weight: 600;
+            padding: 1rem;
+        }
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .btn-group .btn {
+            border-radius: 20px !important;
+            margin: 0 2px;
+            font-weight: 500;
+        }
+        .btn-group .btn.active {
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('contributions')}"></th:block>
+            </div>
+
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-chat-quote-fill"></i> Quản Lý Đóng Góp Người Dùng</h2>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="bi bi-chat-quote-fill stat-icon"></i>
+                            <div class="stat-value" id="totalContributions">0</div>
+                            <div class="stat-label">Tổng đóng góp</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="bi bi-clock-history stat-icon"></i>
+                            <div class="stat-value" id="pendingContributions">0</div>
+                            <div class="stat-label">Chờ duyệt</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="bi bi-check-circle-fill stat-icon"></i>
+                            <div class="stat-value" id="approvedContributions">0</div>
+                            <div class="stat-label">Đã duyệt</div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="bi bi-x-circle-fill stat-icon"></i>
+                            <div class="stat-value" id="rejectedContributions">0</div>
+                            <div class="stat-label">Từ chối</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filters -->
+                <div class="filter-section">
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-funnel"></i> Trạng thái
+                            </label>
+                            <select class="form-select" id="filterStatus" onchange="applyFilters()">
+                                <option value="">Tất cả</option>
+                                <option value="pending">Chờ duyệt</option>
+                                <option value="approved">Đã duyệt</option>
+                                <option value="rejected">Từ chối</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-sort-down"></i> Sắp xếp theo
+                            </label>
+                            <select class="form-select" id="sortBy" onchange="applyFilters()">
+                                <option value="createdAt">Mới nhất</option>
+                                <option value="user">Người dùng</option>
+                                <option value="status">Trạng thái</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </label>
+                            <input type="text" class="form-control" id="searchInput"
+                                   placeholder="Tìm theo tên người dùng hoặc nội dung..."
+                                   onkeyup="applyFilters()">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Người dùng</th>
+                                <th>Tiêu đề</th>
+                                <th>Nội dung</th>
+                                <th>Trạng thái</th>
+                                <th>Ngày tạo</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="contributionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Chi tiết đóng góp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Người dùng:</label>
+                                <div id="modalUserInfo" class="user-info"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Tiêu đề:</label>
+                                <div id="modalTitleContent"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Nội dung:</label>
+                                <div id="modalContent" style="max-height: 300px; overflow-y: auto; white-space: pre-wrap; line-height: 1.6;"></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Ngày tạo:</label>
+                                <div id="modalCreatedAt"></div>
+                            </div>
+                            <div class="mb-3" id="adminFeedbackSection" style="display: none;">
+                                <label class="form-label fw-bold">Phản hồi từ Admin:</label>
+                                <div id="modalAdminFeedback" style="background: #f8f9fa; padding: 10px; border-radius: 5px; white-space: pre-wrap;"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Trạng thái hiện tại:</label>
+                                <div id="modalStatus"></div>
+                            </div>
+                            <div class="mb-3" id="actionButtons">
+                                <!-- Action buttons will be inserted here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Modal -->
+    <div class="modal fade" id="feedbackModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Phản hồi đóng góp</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="feedbackText" class="form-label">Nội dung phản hồi:</label>
+                        <textarea class="form-control" id="feedbackText" rows="4" placeholder="Nhập phản hồi cho đóng góp này..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary" onclick="submitFeedback()">Gửi phản hồi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_URL = '/api/admin/contributions';
+        const token = localStorage.getItem('adminToken');
+        let allContributions = [];
+        let currentFeedbackId = null;
+
+        if (!token) {
+            window.location.href = '/admin/login';
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch(API_URL, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/admin/login';
+                    return;
+                }
+
+                allContributions = await response.json();
+                updateStatistics();
+                applyFilters();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải dữ liệu!');
+            }
+        }
+
+        function updateStatistics() {
+            document.getElementById('totalContributions').textContent = allContributions.length;
+
+            const pending = allContributions.filter(c => c.status === 'pending').length;
+            document.getElementById('pendingContributions').textContent = pending;
+
+            const approved = allContributions.filter(c => c.status === 'approved').length;
+            document.getElementById('approvedContributions').textContent = approved;
+
+            const rejected = allContributions.filter(c => c.status === 'rejected').length;
+            document.getElementById('rejectedContributions').textContent = rejected;
+        }
+
+        function applyFilters() {
+            const statusFilter = document.getElementById('filterStatus').value;
+            const sortBy = document.getElementById('sortBy').value;
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+            let filtered = allContributions.filter(contribution => {
+                const matchesStatus = !statusFilter || contribution.status === statusFilter;
+                const matchesSearch = !searchTerm ||
+                    contribution.user.fullName.toLowerCase().includes(searchTerm) ||
+                    contribution.user.email.toLowerCase().includes(searchTerm) ||
+                    (contribution.title && contribution.title.toLowerCase().includes(searchTerm)) ||
+                    contribution.content.toLowerCase().includes(searchTerm);
+                return matchesStatus && matchesSearch;
+            });
+
+            filtered.sort((a, b) => {
+                if (sortBy === 'user') return a.user.fullName.localeCompare(b.user.fullName);
+                if (sortBy === 'status') return a.status.localeCompare(b.status);
+                return new Date(b.createdAt) - new Date(a.createdAt); // createdAt by default
+            });
+
+            renderTable(filtered);
+        }
+
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+
+                const avatarImg = item.user.avatarUrl
+                    ? `<img src="${item.user.avatarUrl}" class="user-avatar" alt="Avatar">`
+                    : `<div class="user-avatar bg-secondary d-flex align-items-center justify-content-center text-white">
+                         <i class="bi bi-person"></i>
+                       </div>`;
+
+                const titleText = item.title ? item.title : '(Không có tiêu đề)';
+                const contentPreview = item.content.length > 100
+                    ? item.content.substring(0, 100) + '...'
+                    : item.content;
+
+                const statusBadge = getStatusBadge(item.status);
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="d-flex align-items-center">
+                            ${avatarImg}
+                            <div class="ms-2">
+                                <div class="fw-bold">${item.user.fullName}</div>
+                                <small class="text-muted">${item.user.email}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${titleText}</td>
+                    <td>${contentPreview}</td>
+                    <td>${statusBadge} ${item.adminFeedback ? '<i class="bi bi-chat-quote text-info" title="Có phản hồi từ admin"></i>' : ''}</td>
+                    <td>${new Date(item.createdAt).toLocaleDateString('vi-VN')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-info" onclick="viewContribution(${item.contributionId})" title="Xem chi tiết">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                        <button class="btn btn-sm btn-warning" onclick="openFeedbackModal(${item.contributionId})" title="Phản hồi">
+                            <i class="bi bi-chat-dots"></i>
+                        </button>
+                        ${item.status === 'pending' ?
+                            `<button class="btn btn-sm btn-success" onclick="approveContribution(${item.contributionId})" title="Duyệt">
+                                <i class="bi bi-check-circle"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="rejectContribution(${item.contributionId})" title="Từ chối">
+                                <i class="bi bi-x-circle"></i>
+                            </button>` : ''
+                        }
+                        <button class="btn btn-sm btn-outline-danger" onclick="deleteContribution(${item.contributionId})" title="Xóa">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function getStatusBadge(status) {
+            const badges = {
+                'pending': '<span class="badge bg-warning">Chờ duyệt</span>',
+                'approved': '<span class="badge bg-success">Đã duyệt</span>',
+                'rejected': '<span class="badge bg-danger">Từ chối</span>'
+            };
+            return badges[status] || '<span class="badge bg-secondary">Unknown</span>';
+        }
+
+        async function viewContribution(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const data = await response.json();
+
+                document.getElementById('modalUserInfo').innerHTML = `
+                    <div class="d-flex align-items-center">
+                        ${data.user.avatarUrl ?
+                            `<img src="${data.user.avatarUrl}" class="user-avatar me-2" alt="Avatar">` :
+                            `<div class="user-avatar bg-secondary d-flex align-items-center justify-content-center text-white me-2">
+                                <i class="bi bi-person"></i>
+                            </div>`
+                        }
+                        <div>
+                            <div class="fw-bold">${data.user.fullName}</div>
+                            <small class="text-muted">${data.user.email}</small>
+                        </div>
+                    </div>
+                `;
+
+                document.getElementById('modalTitleContent').textContent = data.title || '(Không có tiêu đề)';
+                document.getElementById('modalContent').textContent = data.content;
+                document.getElementById('modalCreatedAt').textContent = new Date(data.createdAt).toLocaleString('vi-VN');
+                document.getElementById('modalStatus').innerHTML = getStatusBadge(data.status);
+
+                if (data.adminFeedback) {
+                    document.getElementById('adminFeedbackSection').style.display = 'block';
+                    document.getElementById('modalAdminFeedback').textContent = data.adminFeedback;
+                } else {
+                    document.getElementById('adminFeedbackSection').style.display = 'none';
+                }
+
+                const actionButtons = document.getElementById('actionButtons');
+                if (data.status === 'pending') {
+                    actionButtons.innerHTML = `
+                        <button class="btn btn-success w-100 mb-2" onclick="approveContribution(${id}); bootstrap.Modal.getInstance(document.getElementById('contributionModal')).hide();">
+                            <i class="bi bi-check-circle"></i> Duyệt đóng góp
+                        </button>
+                        <button class="btn btn-danger w-100" onclick="rejectContribution(${id}); bootstrap.Modal.getInstance(document.getElementById('contributionModal')).hide();">
+                            <i class="bi bi-x-circle"></i> Từ chối đóng góp
+                        </button>
+                    `;
+                } else {
+                    actionButtons.innerHTML = '<small class="text-muted">Đóng góp đã được xử lý</small>';
+                }
+
+                new bootstrap.Modal(document.getElementById('contributionModal')).show();
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi tải chi tiết!');
+            }
+        }
+
+        async function approveContribution(id) {
+            if (!confirm('Bạn có chắc chắn muốn duyệt đóng góp này?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}/approve`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    alert('Đã duyệt đóng góp thành công!');
+                    loadData();
+                } else {
+                    alert('Lỗi khi duyệt đóng góp!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi duyệt đóng góp!');
+            }
+        }
+
+        async function rejectContribution(id) {
+            if (!confirm('Bạn có chắc chắn muốn từ chối đóng góp này?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}/reject`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    alert('Đã từ chối đóng góp thành công!');
+                    loadData();
+                } else {
+                    alert('Lỗi khi từ chối đóng góp!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi từ chối đóng góp!');
+            }
+        }
+
+        async function deleteContribution(id) {
+            if (!confirm('Bạn có chắc chắn muốn xóa đóng góp này?')) return;
+
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    alert('Đã xóa đóng góp thành công!');
+                    loadData();
+                } else {
+                    alert('Lỗi khi xóa đóng góp!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi xóa đóng góp!');
+            }
+        }
+
+        function openFeedbackModal(id) {
+            currentFeedbackId = id;
+            document.getElementById('feedbackText').value = '';
+            new bootstrap.Modal(document.getElementById('feedbackModal')).show();
+        }
+
+        async function submitFeedback() {
+            const feedback = document.getElementById('feedbackText').value.trim();
+            if (!feedback) {
+                alert('Vui lòng nhập nội dung phản hồi!');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/${currentFeedbackId}/feedback`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(feedback)
+                });
+
+                if (response.ok) {
+                    alert('Đã gửi phản hồi thành công!');
+                    bootstrap.Modal.getInstance(document.getElementById('feedbackModal')).hide();
+                    loadData();
+                } else {
+                    alert('Lỗi khi gửi phản hồi!');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi gửi phản hồi!');
+            }
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

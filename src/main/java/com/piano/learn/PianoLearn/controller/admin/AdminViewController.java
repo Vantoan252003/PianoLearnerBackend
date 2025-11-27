@@ -122,4 +122,9 @@ public class AdminViewController {
     public String showSheetRatings() {
         return "admin/sheet_ratings";
     }
+
+    @GetMapping("/contributions")
+    public String showContributions() {
+        return "admin/contributions";
+    }
 }

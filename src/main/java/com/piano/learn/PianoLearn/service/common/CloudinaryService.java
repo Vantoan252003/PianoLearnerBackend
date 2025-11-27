@@ -63,5 +63,12 @@ public class CloudinaryService {
                 ObjectUtils.asMap("resource_type", "raw", "public_id", publicId));
         return (String) uploadResult.get("secure_url");
     }
-}
 
+    public String generateSignedUrl(String publicId, String resourceType) {
+        return cloudinary.url().resourceType(resourceType).type("upload").signed(true).generate(publicId);
+    }
+    
+    public void updateAccessMode(String publicId, String resourceType, String accessMode) throws Exception {
+        cloudinary.api().update(publicId, ObjectUtils.asMap("access_mode", accessMode, "resource_type", resourceType));
+    }
+}

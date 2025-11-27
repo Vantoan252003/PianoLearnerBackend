@@ -31,10 +31,12 @@ import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
 import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
 import com.piano.learn.PianoLearn.dto.auth.UserInfo;
 import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
+import com.piano.learn.PianoLearn.entity.Contribution;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.security.JwtUtil;
 import com.piano.learn.PianoLearn.service.UploadService;
 import com.piano.learn.PianoLearn.service.UserService;
+import com.piano.learn.PianoLearn.service.admin.ContributionService;
 
 import jakarta.validation.Valid;
 
@@ -56,6 +58,9 @@ public class AuthController {
 
     @Autowired
     private UploadService uploadService; 
+
+    @Autowired
+    private ContributionService contributionService; 
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -444,6 +449,48 @@ public class AuthController {
             response.put("message", message);
             response.put("levelName", updatedUser.getLevelName());
             response.put("exp", String.valueOf(updatedUser.getTotalExp()));
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+
+    @PostMapping("/submit-contribution")
+    public ResponseEntity<?> submitContribution(@RequestBody Map<String, String> request) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+            if (authentication == null || !authentication.isAuthenticated()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "User not authenticated");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+            }
+
+            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+            User user = userService.findUserByEmail(userDetails.getUsername());
+
+            String title = request.get("title");
+            String content = request.get("content");
+
+            if (content == null || content.trim().isEmpty()) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Content is required");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+            }
+
+            Contribution contribution = Contribution.builder()
+                .user(user)
+                .title(title)
+                .content(content)
+                .build();
+
+            contributionService.saveContribution(contribution);
+
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Đóng góp của bạn đã được gửi thành công!");
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {

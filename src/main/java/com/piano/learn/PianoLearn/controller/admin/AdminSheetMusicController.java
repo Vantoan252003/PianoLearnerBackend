@@ -170,4 +170,34 @@ public class AdminSheetMusicController {
         }
         return ResponseEntity.notFound().build();
     }
+    
+    /**
+     * PUT /api/admin/sheet-music/{id}/view - Tăng view count
+     */
+    @PutMapping("/{id}/view")
+    public ResponseEntity<?> incrementView(@PathVariable Integer id) {
+        Optional<SheetMusic> sheet = sheetMusicRepository.findById(id);
+        if (sheet.isPresent()) {
+            SheetMusic s = sheet.get();
+            s.setViewCount(s.getViewCount() + 1);
+            sheetMusicRepository.save(s);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
+    
+    /**
+     * PUT /api/admin/sheet-music/{id}/download - Tăng download count
+     */
+    @PutMapping("/{id}/download")
+    public ResponseEntity<?> incrementDownload(@PathVariable Integer id) {
+        Optional<SheetMusic> sheet = sheetMusicRepository.findById(id);
+        if (sheet.isPresent()) {
+            SheetMusic s = sheet.get();
+            s.setDownloadCount(s.getDownloadCount() + 1);
+            sheetMusicRepository.save(s);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.notFound().build();
+    }
 }

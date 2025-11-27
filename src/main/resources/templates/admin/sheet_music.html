@@ -311,6 +311,9 @@
                     <td><span class="badge bg-success"><i class="bi bi-download"></i> ${item.downloadCount || 0}</span></td>
                     <td>${item.isPublic ? '<span class="badge bg-success">Công khai</span>' : '<span class="badge bg-secondary">Riêng tư</span>'}</td>
                     <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewSheet(${item.sheetId}, '${item.fileUrl}')" title="Xem">
+                            <i class="bi bi-eye"></i>
+                        </button>
                         <button class="btn btn-sm btn-info" onclick="downloadSheet(${item.sheetId}, '${item.title}')" title="Tải xuống">
                             <i class="bi bi-download"></i>
                         </button>
@@ -431,6 +434,12 @@
 
         async function downloadSheet(id, title) {
             try {
+                // Tăng download count
+                await fetch(`${API_URL}/${id}/download`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
                 const response = await fetch(`/api/auth/sheet-music/download/${id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -451,6 +460,22 @@
             } catch (error) {
                 console.error('Error:', error);
                 alert('Lỗi khi tải file!');
+            }
+        }
+
+        async function viewSheet(id, fileUrl) {
+            try {
+                // Tăng view count
+                await fetch(`${API_URL}/${id}/view`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                // Mở file trong tab mới
+                window.open(fileUrl, '_blank');
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Lỗi khi xem file!');
             }
         }
 
