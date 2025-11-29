@@ -14,8 +14,10 @@ import com.piano.learn.PianoLearn.dto.song.SongRatingDTO;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.song.Song;
 import com.piano.learn.PianoLearn.entity.song.SongRating;
+import com.piano.learn.PianoLearn.repository.auth.UserRepository;
 import com.piano.learn.PianoLearn.repository.song.SongRatingRepository;
 import com.piano.learn.PianoLearn.repository.song.SongRepository;
+import com.piano.learn.PianoLearn.service.notification.NotificationService;
 
 @Service
 public class SongRatingService {
@@ -25,6 +27,12 @@ public class SongRatingService {
     
     @Autowired
     private SongRepository songRepository;
+    
+    @Autowired
+    private NotificationService notificationService;
+    
+    @Autowired
+    private UserRepository userRepository;
     
     /**
      * Tạo hoặc cập nhật rating của user cho bài hát
@@ -60,6 +68,19 @@ public class SongRatingService {
         
         // Cập nhật average rating cho bài hát
         updateSongAverageRating(songId);
+        
+        // Gửi thông báo cho owner của bài hát (nếu không phải tự rate)
+        // TODO: Thêm trường uploadedBy vào Song entity để gửi thông báo
+        // User rater = userRepository.findById(userId).orElse(null);
+        // if (rater != null && song.getUploadedBy() != null) {
+        //     notificationService.notifyOnSongRated(
+        //         song.getUploadedBy().getUserId(),
+        //         rater,
+        //         song,
+        //         request.getRating(),
+        //         request.getComment()
+        //     );
+        // }
         
         return convertToDTO(saved);
     }

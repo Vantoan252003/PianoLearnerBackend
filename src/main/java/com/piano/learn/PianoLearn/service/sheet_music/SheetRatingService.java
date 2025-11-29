@@ -14,8 +14,10 @@ import com.piano.learn.PianoLearn.dto.sheet.SheetRatingDTO;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.sheet.SheetMusic;
 import com.piano.learn.PianoLearn.entity.sheet.SheetRating;
+import com.piano.learn.PianoLearn.repository.auth.UserRepository;
 import com.piano.learn.PianoLearn.repository.sheet.SheetMusicRepository;
 import com.piano.learn.PianoLearn.repository.sheet.SheetRatingRepository;
+import com.piano.learn.PianoLearn.service.notification.NotificationService;
 
 @Service
 public class SheetRatingService {
@@ -25,6 +27,12 @@ public class SheetRatingService {
     
     @Autowired
     private SheetMusicRepository sheetMusicRepository;
+    
+    @Autowired
+    private NotificationService notificationService;
+    
+    @Autowired
+    private UserRepository userRepository;
     
     /**
      * Tạo hoặc cập nhật rating của user cho sheet music
@@ -60,6 +68,18 @@ public class SheetRatingService {
         
         // Cập nhật average rating cho sheet
         updateSheetAverageRating(sheetId);
+        
+        // Gửi thông báo cho owner của sheet music (nếu không phải tự rate)
+        User rater = userRepository.findById(userId).orElse(null);
+        if (rater != null && sheet.getUploadedBy() != null) {
+            notificationService.notifyOnSheetRated(
+                sheet.getUploadedBy().getUserId(),
+                rater,
+                sheet,
+                request.getRating(),
+                request.getComment()
+            );
+        }
         
         return convertToDTO(saved);
     }

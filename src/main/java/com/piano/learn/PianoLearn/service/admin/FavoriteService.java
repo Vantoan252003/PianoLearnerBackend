@@ -14,6 +14,7 @@ import com.piano.learn.PianoLearn.repository.auth.UserRepository;
 import com.piano.learn.PianoLearn.repository.favorite.FavoriteRepository;
 import com.piano.learn.PianoLearn.repository.sheet.SheetMusicRepository;
 import com.piano.learn.PianoLearn.repository.song.SongRepository;
+import com.piano.learn.PianoLearn.service.notification.NotificationService;
 
 @Service
 public class FavoriteService {
@@ -29,6 +30,9 @@ public class FavoriteService {
     
     @Autowired
     private SheetMusicRepository sheetMusicRepository;
+    
+    @Autowired
+    private NotificationService notificationService;
     
     public List<Favorite> getAllFavorites() {
         return favoriteRepository.findAll();
@@ -77,6 +81,9 @@ public class FavoriteService {
                 .sheetMusic(null)
                 .build();
             favoriteRepository.save(favorite);
+            
+            // TODO: Gửi thông báo cho owner của bài hát (cần thêm trường uploadedBy vào Song entity)
+            // notificationService.notifyOnSongFavorited(song.getUploadedBy().getUserId(), user, song);
         }
     }
     
@@ -95,6 +102,15 @@ public class FavoriteService {
                 .sheetMusic(sheetMusic)
                 .build();
             favoriteRepository.save(favorite);
+            
+            // Gửi thông báo cho owner của sheet music
+            if (sheetMusic.getUploadedBy() != null) {
+                notificationService.notifyOnSheetFavorited(
+                    sheetMusic.getUploadedBy().getUserId(), 
+                    user, 
+                    sheetMusic
+                );
+            }
         }
     }
     

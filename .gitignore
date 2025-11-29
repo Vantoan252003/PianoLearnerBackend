@@ -35,3 +35,7 @@ build/
 ### Environment Variables ###
 .env
 .env.local
+
+### Firebase Service Account Keys ###
+src/main/resources/config/*.json
+src/main/java/com/piano/learn/PianoLearn/config/*.json
