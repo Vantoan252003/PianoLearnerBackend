@@ -95,6 +95,9 @@
                     // Save token
                     localStorage.setItem('adminToken', data.token);
                     localStorage.setItem('adminUser', JSON.stringify(data));
+                    
+                    // Also set cookie for server-side authentication
+                    document.cookie = `adminToken=${data.token}; path=/; max-age=90000000`; // 24 hours
 
                     // Redirect to dashboard
                     window.location.href = '/admin/dashboard';

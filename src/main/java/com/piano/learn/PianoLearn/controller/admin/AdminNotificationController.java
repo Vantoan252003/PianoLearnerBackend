@@ -229,7 +229,20 @@ public class AdminNotificationController {
     
     private Integer getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            throw new RuntimeException("No authentication found");
+        }
+        
         String email = authentication.getName();
-        return userService.findUserByEmail(email).getUserId();
+        if (email == null || email.isEmpty()) {
+            throw new RuntimeException("No email found in authentication");
+        }
+        
+        System.out.println("Current authenticated user email: " + email);
+        
+        User user = userService.findUserByEmail(email);
+        System.out.println("Found user: " + user.getUserId() + " - " + user.getEmail());
+        
+        return user.getUserId();
     }
 }

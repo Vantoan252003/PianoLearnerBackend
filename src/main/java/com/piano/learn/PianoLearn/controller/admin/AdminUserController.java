@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.piano.learn.PianoLearn.entity.auth.Role;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.repository.auth.UserRepository;
 
@@ -58,5 +59,13 @@ public class AdminUserController {
         }
         userRepository.deleteById(id);
         return ResponseEntity.ok().build();
+    }
+    
+    @PostMapping("/create-admin")
+    public ResponseEntity<User> createAdminUser(@RequestBody User adminUser) {
+        // Set role to admin
+        adminUser.setRole(Role.admin);
+        User saved = userRepository.save(adminUser);
+        return ResponseEntity.ok(saved);
     }
 }

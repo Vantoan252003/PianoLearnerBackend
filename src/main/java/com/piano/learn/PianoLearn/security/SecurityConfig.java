@@ -21,10 +21,12 @@ public class SecurityConfig {
 
     private final UserService userService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AdminAuthenticationFilter adminAuthenticationFilter;
 
-    public SecurityConfig(UserService userService, JwtAuthenticationFilter jwtAuthenticationFilter) { 
+    public SecurityConfig(UserService userService, JwtAuthenticationFilter jwtAuthenticationFilter, AdminAuthenticationFilter adminAuthenticationFilter) { 
         this.userService = userService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.adminAuthenticationFilter = adminAuthenticationFilter;
     }
 
     @Bean
@@ -36,7 +38,7 @@ public class SecurityConfig {
                 .requestMatchers("/admin-script.js", "/css/**", "/js/**", "/images/**").permitAll()
                 // Public endpoints - login and register
                 .requestMatchers("/", "/index", "/api/auth/login", "/api/auth/register", "/api/auth/checkmail", "/admin/login", "/api/auth/ranking","/about","/features","/download","/contact","/pricing").permitAll()
-                .requestMatchers("/admin/**").permitAll()
+                .requestMatchers("/admin/**").authenticated()
                 // Admin API endpoints - require ADMIN role
                 .requestMatchers("/api/admin/**").hasAuthority("admin")
                 .requestMatchers("/api/songs").permitAll()
@@ -47,6 +49,7 @@ public class SecurityConfig {
             )
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(adminAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

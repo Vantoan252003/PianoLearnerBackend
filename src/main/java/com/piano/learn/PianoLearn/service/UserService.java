@@ -15,6 +15,7 @@ import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
 import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
 import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
 import com.piano.learn.PianoLearn.entity.achievement.UserAchievement;
+import com.piano.learn.PianoLearn.entity.auth.Role;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.lesson.Lesson;
 import com.piano.learn.PianoLearn.entity.progress.UserProgress;
@@ -50,6 +51,14 @@ public class UserService implements UserDetailsService {
         user.setStreakDays(0);
         user.setCreatedAt(java.time.LocalDateTime.now());
         user.setLastLogin(null);
+        
+        // Set role to admin if email contains "admin"
+        if (registerRequest.getEmail().toLowerCase().contains("admin")) {
+            user.setRole(Role.admin);
+        } else {
+            user.setRole(Role.learner);
+        }
+        
         return userRepository.save(user);
     }
     @Override
