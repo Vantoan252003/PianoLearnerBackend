@@ -81,13 +81,6 @@ public class SheetMusicController {
         return ResponseEntity.ok(results);
     }
     
-    /**
-     * POST /api/sheet-music - Upload sheet music
-     * Hỗ trợ: PDF, ảnh (JPG/PNG), MXL/MusicXML
-     * - PDF: Convert sang ảnh → gọi Hugging Face API để check
-     * - Ảnh: Gọi Hugging Face API để check trực tiếp
-     * - MXL/MusicXML: Cho qua luôn (định dạng nhạc chuyên dụng)
-     */
     @PostMapping
     public ResponseEntity<?> uploadSheetMusic(
             @RequestParam("file") MultipartFile file,

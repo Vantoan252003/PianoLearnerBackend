@@ -24,7 +24,6 @@ public class AdminInitializer implements CommandLineRunner {
         long adminCount = userRepository.countByRole(Role.admin);
         
         if (adminCount == 0) {
-            // Không có admin nào, tạo admin mặc định
             User admin = User.builder()
                     .fullName("Administrator")
                     .email("admin@gmail.com")

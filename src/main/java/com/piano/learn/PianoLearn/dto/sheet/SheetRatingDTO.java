@@ -16,6 +16,7 @@ public class SheetRatingDTO {
     private Integer userId;
     private String username;
     private String userEmail;
+    private String avatarUrl;
     private Integer sheetId;
     private String sheetTitle;
     private Double rating;
