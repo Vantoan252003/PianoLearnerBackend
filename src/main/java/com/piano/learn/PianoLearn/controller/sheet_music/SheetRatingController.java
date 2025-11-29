@@ -46,7 +46,7 @@ public class SheetRatingController {
      * POST /api/auth/sheets/{sheetId}/rating
      * Tạo hoặc cập nhật rating của user cho sheet music (cần auth)
      */
-    @PostMapping("/auth/sheets/{sheetId}/rating")
+    @PostMapping("/auth/sheets/{sheetId}/ratings")
     public ResponseEntity<SheetRatingDTO> createOrUpdateRating(
             @PathVariable Integer sheetId,
             @Valid @RequestBody CreateSheetRatingRequest request) {
@@ -61,7 +61,7 @@ public class SheetRatingController {
     }
     
   
-    @PutMapping("/auth/sheets/{sheetId}/rating")
+    @PutMapping("/auth/sheets/{sheetId}/ratings")
     public ResponseEntity<SheetRatingDTO> updateRating(
             @PathVariable Integer sheetId,
             @Valid @RequestBody CreateSheetRatingRequest request) {
@@ -87,7 +87,7 @@ public class SheetRatingController {
     }
     
  
-    @DeleteMapping("/auth/sheets/{sheetId}/rating")
+    @DeleteMapping("/auth/sheets/{sheetId}/ratings")
     public ResponseEntity<String> deleteRating(@PathVariable Integer sheetId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

@@ -10,9 +10,7 @@ import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.entity.sheet.SheetMusic;
 import com.piano.learn.PianoLearn.entity.song.Song;
 
-/**
- * Service xử lý logic gửi thông báo cho các sự kiện trong hệ thống
- */
+
 @Service
 public class NotificationService {
     

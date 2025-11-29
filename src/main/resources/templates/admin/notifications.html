@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Thông Báo | Piano Learner Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border-left: 5px solid;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+        
+        .stats-card.primary { border-color: #667eea; }
+        .stats-card.success { border-color: #38ef7d; }
+        .stats-card.warning { border-color: #f5576c; }
+        .stats-card.info { border-color: #00f2fe; }
+        
+        .stats-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        
+        .stats-icon.primary { background: var(--primary-gradient); }
+        .stats-icon.success { background: var(--success-gradient); }
+        .stats-icon.warning { background: var(--warning-gradient); }
+        .stats-icon.info { background: var(--info-gradient); }
+        
+        .notification-form-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .form-section-title {
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-gradient-primary {
+            background: var(--primary-gradient);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-gradient-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-gradient-success {
+            background: var(--success-gradient);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+        }
+        
+        .tab-button {
+            background: transparent;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 25px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin: 0 5px;
+        }
+        
+        .tab-button.active {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+        }
+        
+        .scheduled-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #667eea;
+        }
+        
+        .history-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        .badge-custom {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            padding: 10px 15px;
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+        
+        .data-payload-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        
+        #targetCriteriaHelp {
+            font-size: 0.875rem;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{admin/layout :: layout(~{::main}, 'notifications')}">
+        <main>
+            <div class="container-fluid py-4">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h2 mb-0">
+                            <i class="bi bi-bell-fill text-primary"></i>
+                            Quản Lý Thông Báo Push
+                        </h1>
+                        <p class="text-muted">Gửi thông báo đến người dùng qua Firebase Cloud Messaging</p>
+                    </div>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="stats-card primary">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted mb-1">Tổng Thông Báo</div>
+                                    <h3 class="mb-0" th:text="${stats.totalNotifications}">0</h3>
+                                </div>
+                                <div class="stats-icon primary">
+                                    <i class="bi bi-bell"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stats-card success">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted mb-1">Đã Gửi</div>
+                                    <h3 class="mb-0" th:text="${stats.totalSent}">0</h3>
+                                </div>
+                                <div class="stats-icon success">
+                                    <i class="bi bi-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stats-card warning">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted mb-1">Đang Chờ</div>
+                                    <h3 class="mb-0" th:text="${stats.pendingScheduled}">0</h3>
+                                </div>
+                                <div class="stats-icon warning">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stats-card info">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="text-muted mb-1">Đã Lên Lịch</div>
+                                    <h3 class="mb-0" th:text="${stats.totalScheduled}">0</h3>
+                                </div>
+                                <div class="stats-icon info">
+                                    <i class="bi bi-calendar-event"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs Navigation -->
+                <div class="text-center mb-4">
+                    <button class="tab-button active" onclick="switchTab('send')">
+                        <i class="bi bi-send"></i> Gửi Ngay
+                    </button>
+                    <button class="tab-button" onclick="switchTab('schedule')">
+                        <i class="bi bi-calendar-plus"></i> Đặt Lịch
+                    </button>
+                    <button class="tab-button" onclick="switchTab('history')">
+                        <i class="bi bi-clock-history"></i> Lịch Sử
+                    </button>
+                    <button class="tab-button" onclick="switchTab('scheduled')">
+                        <i class="bi bi-list-check"></i> Thông Báo Đã Lên Lịch
+                    </button>
+                </div>
+
+                <!-- Send Now Tab -->
+                <div id="sendTab" class="tab-content">
+                    <div class="notification-form-card">
+                        <h4 class="form-section-title">
+                            <i class="bi bi-send-fill"></i>
+                            Gửi Thông Báo Ngay Lập Tức
+                        </h4>
+                        
+                        <form id="sendForm">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-card-heading"></i> Tiêu Đề *
+                                        </label>
+                                        <input type="text" class="form-control" id="sendTitle" required
+                                               placeholder="Nhập tiêu đề thông báo...">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-text-paragraph"></i> Nội Dung *
+                                        </label>
+                                        <textarea class="form-control" id="sendBody" rows="4" required
+                                                  placeholder="Nhập nội dung thông báo..."></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-image"></i> URL Hình Ảnh
+                                        </label>
+                                        <input type="url" class="form-control" id="sendImageUrl"
+                                               placeholder="https://example.com/image.jpg">
+                                        <small class="text-muted">Tùy chọn: URL hình ảnh hiển thị trong thông báo</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-tag"></i> Loại Thông Báo *
+                                        </label>
+                                        <select class="form-select" id="sendNotificationType" required>
+                                            <option th:each="type : ${notificationTypes}" 
+                                                    th:value="${type}" 
+                                                    th:text="${type}"></option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-people"></i> Đối Tượng Nhận *
+                                        </label>
+                                        <select class="form-select" id="sendTargetAudience" required 
+                                                onchange="updateTargetCriteriaHelp('send')">
+                                            <option th:each="audience : ${targetAudiences}" 
+                                                    th:value="${audience}" 
+                                                    th:text="${#strings.replace(audience, '_', ' ')}"></option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3" id="sendTargetCriteriaDiv">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-filter"></i> Điều Kiện Lọc
+                                        </label>
+                                        <input type="text" class="form-control" id="sendTargetCriteria"
+                                               placeholder="Nhập điều kiện...">
+                                        <div id="sendTargetCriteriaHelp" class="form-text"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Data Payload Section -->
+                            <div class="data-payload-section">
+                                <h6 class="fw-bold mb-3">
+                                    <i class="bi bi-code-square"></i> Data Payload (Tùy chọn)
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small">Key 1</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="sendDataKey1" placeholder="type">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small">Value 1</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="sendDataValue1" placeholder="announcement">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small">Key 2</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="sendDataKey2" placeholder="id">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small">Value 2</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="sendDataValue2" placeholder="123">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end mt-4">
+                                <button type="submit" class="btn btn-gradient-primary btn-lg">
+                                    <i class="bi bi-send-fill"></i> Gửi Ngay
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Schedule Tab -->
+                <div id="scheduleTab" class="tab-content" style="display: none;">
+                    <div class="notification-form-card">
+                        <h4 class="form-section-title">
+                            <i class="bi bi-calendar-plus-fill"></i>
+                            Đặt Lịch Gửi Thông Báo
+                        </h4>
+                        
+                        <form id="scheduleForm">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-card-heading"></i> Tiêu Đề *
+                                        </label>
+                                        <input type="text" class="form-control" id="scheduleTitle" required>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-text-paragraph"></i> Nội Dung *
+                                        </label>
+                                        <textarea class="form-control" id="scheduleBody" rows="4" required></textarea>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-image"></i> URL Hình Ảnh
+                                        </label>
+                                        <input type="url" class="form-control" id="scheduleImageUrl">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-calendar-event"></i> Thời Gian Gửi *
+                                        </label>
+                                        <input type="datetime-local" class="form-control" 
+                                               id="scheduleTime" required>
+                                        <small class="text-muted">Chọn thời gian muốn gửi thông báo</small>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-tag"></i> Loại Thông Báo *
+                                        </label>
+                                        <select class="form-select" id="scheduleNotificationType" required>
+                                            <option th:each="type : ${notificationTypes}" 
+                                                    th:value="${type}" 
+                                                    th:text="${type}"></option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-people"></i> Đối Tượng Nhận *
+                                        </label>
+                                        <select class="form-select" id="scheduleTargetAudience" required
+                                                onchange="updateTargetCriteriaHelp('schedule')">
+                                            <option th:each="audience : ${targetAudiences}" 
+                                                    th:value="${audience}" 
+                                                    th:text="${#strings.replace(audience, '_', ' ')}"></option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3" id="scheduleTargetCriteriaDiv">
+                                        <label class="form-label fw-bold">
+                                            <i class="bi bi-filter"></i> Điều Kiện Lọc
+                                        </label>
+                                        <input type="text" class="form-control" id="scheduleTargetCriteria">
+                                        <div id="scheduleTargetCriteriaHelp" class="form-text"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Data Payload -->
+                            <div class="data-payload-section">
+                                <h6 class="fw-bold mb-3">
+                                    <i class="bi bi-code-square"></i> Data Payload (Tùy chọn)
+                                </h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small">Key 1</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="scheduleDataKey1">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small">Value 1</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="scheduleDataValue1">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-2">
+                                            <label class="form-label small">Key 2</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="scheduleDataKey2">
+                                        </div>
+                                        <div class="mb-2">
+                                            <label class="form-label small">Value 2</label>
+                                            <input type="text" class="form-control form-control-sm" 
+                                                   id="scheduleDataValue2">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end mt-4">
+                                <button type="submit" class="btn btn-gradient-success btn-lg">
+                                    <i class="bi bi-calendar-check"></i> Đặt Lịch
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- History Tab -->
+                <div id="historyTab" class="tab-content" style="display: none;">
+                    <div class="notification-form-card">
+                        <h4 class="form-section-title">
+                            <i class="bi bi-clock-history"></i>
+                            Lịch Sử Thông Báo Đã Gửi
+                        </h4>
+                        
+                        <div id="historyList">
+                            <div th:if="${#lists.isEmpty(recentNotifications)}" 
+                                 class="text-center text-muted py-5">
+                                <i class="bi bi-inbox" style="font-size: 48px;"></i>
+                                <p class="mt-3">Chưa có lịch sử gửi thông báo</p>
+                            </div>
+                            
+                            <div th:each="notif : ${recentNotifications}" class="history-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold" th:text="${notif.title}"></h6>
+                                        <p class="mb-2 text-muted" th:text="${notif.body}"></p>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <span class="badge badge-custom bg-primary" 
+                                                  th:text="${notif.notificationType}"></span>
+                                            <span class="badge badge-custom bg-info" 
+                                                  th:text="${notif.targetAudience}"></span>
+                                            <span class="badge badge-custom bg-success">
+                                                <i class="bi bi-check"></i> 
+                                                <span th:text="${notif.sentCount}"></span> gửi
+                                            </span>
+                                            <span th:if="${notif.failedCount > 0}" 
+                                                  class="badge badge-custom bg-danger">
+                                                <i class="bi bi-x"></i> 
+                                                <span th:text="${notif.failedCount}"></span> lỗi
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="text-end text-muted small">
+                                        <i class="bi bi-clock"></i>
+                                        <span th:text="${#temporals.format(notif.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduled Tab -->
+                <div id="scheduledTab" class="tab-content" style="display: none;">
+                    <div class="notification-form-card">
+                        <h4 class="form-section-title">
+                            <i class="bi bi-list-check"></i>
+                            Danh Sách Thông Báo Đã Lên Lịch
+                        </h4>
+                        
+                        <div id="scheduledList">
+                            <div th:if="${#lists.isEmpty(pendingScheduled)}" 
+                                 class="text-center text-muted py-5">
+                                <i class="bi bi-calendar-x" style="font-size: 48px;"></i>
+                                <p class="mt-3">Không có thông báo nào đang chờ gửi</p>
+                            </div>
+                            
+                            <div th:each="scheduled : ${pendingScheduled}" class="scheduled-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1 fw-bold" th:text="${scheduled.title}"></h6>
+                                        <p class="mb-2 text-muted" th:text="${scheduled.body}"></p>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            <span class="badge badge-custom bg-primary" 
+                                                  th:text="${scheduled.notificationType}"></span>
+                                            <span class="badge badge-custom bg-info" 
+                                                  th:text="${scheduled.targetAudience}"></span>
+                                            <span class="badge badge-custom bg-warning text-dark">
+                                                <i class="bi bi-calendar-event"></i>
+                                                <span th:text="${#temporals.format(scheduled.scheduledTime, 'dd/MM/yyyy HH:mm')}"></span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-sm btn-danger" 
+                                                th:onclick="'cancelScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                            <i class="bi bi-x-circle"></i> Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Switch tabs
+        function switchTab(tab) {
+            // Hide all tabs
+            document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
+            document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
+            
+            // Show selected tab
+            document.getElementById(tab + "Tab").style.display = "block";
+            event.target.classList.add("active");
+        }
+
+        // Update target criteria help text
+        function updateTargetCriteriaHelp(prefix) {
+            const audience = document.getElementById(prefix + "TargetAudience").value;
+            const helpDiv = document.getElementById(prefix + "TargetCriteriaHelp");
+            const criteriaInput = document.getElementById(prefix + "TargetCriteria");
+            
+            let helpText = "";
+            let placeholder = "";
+            let required = false;
+            
+            switch(audience) {
+                case "SPECIFIC_USER":
+                    helpText = "Nhập User ID cần gửi";
+                    placeholder = "VD: 123";
+                    required = true;
+                    break;
+                case "BY_LEVEL":
+                    helpText = "Nhập tên level (beginner, intermediate, advanced)";
+                    placeholder = "VD: advanced";
+                    required = true;
+                    break;
+                case "BY_ROLE":
+                    helpText = "Nhập role (learner, instructor, admin)";
+                    placeholder = "VD: learner";
+                    required = true;
+                    break;
+                default:
+                    helpText = "Không cần điều kiện lọc cho đối tượng này";
+                    placeholder = "";
+                    required = false;
+            }
+            
+            helpDiv.textContent = helpText;
+            criteriaInput.placeholder = placeholder;
+            criteriaInput.required = required;
+        }
+
+        // Send form handler
+        document.getElementById("sendForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append("title", document.getElementById("sendTitle").value);
+            formData.append("body", document.getElementById("sendBody").value);
+            formData.append("imageUrl", document.getElementById("sendImageUrl").value);
+            formData.append("notificationType", document.getElementById("sendNotificationType").value);
+            formData.append("targetAudience", document.getElementById("sendTargetAudience").value);
+            formData.append("targetCriteria", document.getElementById("sendTargetCriteria").value);
+            formData.append("dataKey1", document.getElementById("sendDataKey1").value);
+            formData.append("dataValue1", document.getElementById("sendDataValue1").value);
+            formData.append("dataKey2", document.getElementById("sendDataKey2").value);
+            formData.append("dataValue2", document.getElementById("sendDataValue2").value);
+            
+            try {
+                const response = await fetch("/admin/notifications/send", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Thành công!",
+                        html: `Đã gửi thông báo<br>
+                               <strong>Gửi thành công:</strong> ${result.sentCount}<br>
+                               <strong>Gửi thất bại:</strong> ${result.failedCount}`,
+                        confirmButtonColor: "#667eea"
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: result.message,
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi!",
+                    text: "Có lỗi xảy ra khi gửi thông báo",
+                    confirmButtonColor: "#667eea"
+                });
+            }
+        });
+
+        // Schedule form handler
+        document.getElementById("scheduleForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append("title", document.getElementById("scheduleTitle").value);
+            formData.append("body", document.getElementById("scheduleBody").value);
+            formData.append("imageUrl", document.getElementById("scheduleImageUrl").value);
+            formData.append("notificationType", document.getElementById("scheduleNotificationType").value);
+            formData.append("targetAudience", document.getElementById("scheduleTargetAudience").value);
+            formData.append("targetCriteria", document.getElementById("scheduleTargetCriteria").value);
+            formData.append("scheduledTime", document.getElementById("scheduleTime").value);
+            formData.append("dataKey1", document.getElementById("scheduleDataKey1").value);
+            formData.append("dataValue1", document.getElementById("scheduleDataValue1").value);
+            formData.append("dataKey2", document.getElementById("scheduleDataKey2").value);
+            formData.append("dataValue2", document.getElementById("scheduleDataValue2").value);
+            
+            try {
+                const response = await fetch("/admin/notifications/schedule", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Thành công!",
+                        text: "Đã đặt lịch gửi thông báo",
+                        confirmButtonColor: "#667eea"
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: result.message,
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi!",
+                    text: "Có lỗi xảy ra khi đặt lịch",
+                    confirmButtonColor: "#667eea"
+                });
+            }
+        });
+
+        // Cancel scheduled notification
+        async function cancelScheduled(id) {
+            const result = await Swal.fire({
+                title: "Xác nhận hủy?",
+                text: "Bạn có chắc muốn hủy thông báo đã lên lịch này?",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#667eea",
+                confirmButtonText: "Hủy thông báo",
+                cancelButtonText: "Đóng"
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/notifications/cancel/${id}`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Đã hủy!",
+                            text: "Thông báo đã được hủy",
+                            confirmButtonColor: "#667eea"
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi!",
+                            text: data.message,
+                            confirmButtonColor: "#667eea"
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: "Có lỗi xảy ra khi hủy thông báo",
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            }
+        }
+
+        // Initialize
+        $(document).ready(function() {
+            updateTargetCriteriaHelp("send");
+            updateTargetCriteriaHelp("schedule");
+        });
+    </script>
+</body></html>

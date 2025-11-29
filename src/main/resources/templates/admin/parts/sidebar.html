@@ -61,16 +61,23 @@
                     th:classappend="${active}=='analytics' ? ' active' : ''">
                     <i class="bi bi-bar-chart-line-fill"></i> Bảng phân tích
                 </a>
-                       <a href="/admin/system-settings" class="list-group-item list-group-item-action"
-                        th:classappend="${active}=='system-settings' ? ' active' : ''">
-                        <i class="bi bi-gear-fill"></i> Cài Đặt Hệ Thống
-                    </a>
+                
+                <!-- Quản Lý Thông Báo -->
+                <a href="/admin/notifications" class="list-group-item list-group-item-action"
+                    th:classappend="${active}=='notifications' ? ' active' : ''">
+                    <i class="bi bi-bell-fill"></i> Quản Lý Thông Báo
+                </a>
+                
+                <a href="/admin/system-settings" class="list-group-item list-group-item-action"
+                    th:classappend="${active}=='system-settings' ? ' active' : ''">
+                    <i class="bi bi-gear-fill"></i> Cài Đặt Hệ Thống
+                </a>
 
-                    <!-- Đóng Góp Người Dùng -->
-                    <a href="/admin/contributions" class="list-group-item list-group-item-action"
-                        th:classappend="${active}=='contributions' ? ' active' : ''">
-                        <i class="bi bi-chat-quote-fill"></i> Đóng Góp Người Dùng
-                    </a>
+                <!-- Đóng Góp Người Dùng -->
+                <a href="/admin/contributions" class="list-group-item list-group-item-action"
+                    th:classappend="${active}=='contributions' ? ' active' : ''">
+                    <i class="bi bi-chat-quote-fill"></i> Đóng Góp Người Dùng
+                </a>
                 <a class="list-group-item collapse-header" data-bs-toggle="collapse" href="#userManagement"
                     role="button" aria-expanded="true">
                     <i class="bi bi-people-fill"></i> Quản Lý Người Dùng
