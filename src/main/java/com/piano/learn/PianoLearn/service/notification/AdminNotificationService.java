@@ -118,6 +118,10 @@ public class AdminNotificationService {
             LocalDateTime scheduledTime,
             Map<String, String> dataPayload) {
         
+        System.out.println("=== Schedule Notification Debug ===");
+        System.out.println("ScheduledTime received: " + scheduledTime);
+        System.out.println("Current time: " + LocalDateTime.now());
+        
         User admin = User.builder().userId(adminId).build();
         
         ScheduledNotification scheduled = ScheduledNotification.builder()
@@ -133,7 +137,10 @@ public class AdminNotificationService {
                 .status(ScheduleStatus.PENDING)
                 .build();
         
-        return scheduledNotificationRepository.save(scheduled);
+        ScheduledNotification saved = scheduledNotificationRepository.save(scheduled);
+        System.out.println("Saved scheduled notification with ID: " + saved.getScheduledNotificationId() + ", ScheduledTime: " + saved.getScheduledTime());
+        
+        return saved;
     }
     
     private List<User> getTargetUsers(TargetAudience targetAudience, String targetCriteria) {
@@ -193,6 +200,37 @@ public class AdminNotificationService {
     }
     
     /**
+     * Xóa scheduled notification vĩnh viễn
+     */
+    @Transactional
+    public boolean deleteScheduledNotification(Integer scheduledId) {
+        return scheduledNotificationRepository.findById(scheduledId)
+                .map(scheduled -> {
+                    scheduledNotificationRepository.delete(scheduled);
+                    return true;
+                })
+                .orElse(false);
+    }
+    
+    /**
+     * Kích hoạt lại scheduled notification
+     */
+    @Transactional
+    public boolean activateScheduledNotification(Integer scheduledId) {
+        return scheduledNotificationRepository.findById(scheduledId)
+                .map(scheduled -> {
+                    if (scheduled.getStatus() == ScheduleStatus.CANCELLED) {
+                        scheduled.setStatus(ScheduleStatus.PENDING);
+                        scheduled.setUpdatedAt(LocalDateTime.now());
+                        scheduledNotificationRepository.save(scheduled);
+                        return true;
+                    }
+                    return false;
+                })
+                .orElse(false);
+    }
+    
+    /**
      * Lấy lịch sử notifications
      */
     public List<Notification> getNotificationHistory(Integer adminId) {
@@ -227,6 +265,52 @@ public class AdminNotificationService {
         stats.put("totalScheduled", scheduledNotificationRepository.count());
         
         return stats;
+    }
+    
+    /**
+     * Lấy tất cả scheduled notifications
+     */
+    public List<ScheduledNotification> getAllScheduledNotifications() {
+        return scheduledNotificationRepository.findAll();
+    }
+    
+    /**
+     * Lấy scheduled notification theo ID
+     */
+    public ScheduledNotification getScheduledNotificationById(Integer id) {
+        return scheduledNotificationRepository.findById(id).orElse(null);
+    }
+    
+    /**
+     * Cập nhật scheduled notification
+     */
+    @Transactional
+    public boolean updateScheduledNotification(
+            Integer scheduledId,
+            String title,
+            String body,
+            String imageUrl,
+            NotificationType type,
+            TargetAudience targetAudience,
+            String targetCriteria,
+            LocalDateTime scheduledTime,
+            Map<String, String> dataPayload) {
+        
+        return scheduledNotificationRepository.findById(scheduledId)
+                .map(scheduled -> {
+                    scheduled.setTitle(title);
+                    scheduled.setBody(body);
+                    scheduled.setImageUrl(imageUrl);
+                    scheduled.setNotificationType(type);
+                    scheduled.setTargetAudience(targetAudience);
+                    scheduled.setTargetCriteria(targetCriteria);
+                    scheduled.setScheduledTime(scheduledTime);
+                    scheduled.setDataPayload(convertMapToJson(dataPayload));
+                    scheduled.setUpdatedAt(LocalDateTime.now());
+                    scheduledNotificationRepository.save(scheduled);
+                    return true;
+                })
+                .orElse(false);
     }
     
     /**

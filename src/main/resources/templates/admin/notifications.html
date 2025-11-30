@@ -162,6 +162,23 @@
             color: #6c757d;
             margin-top: 5px;
         }
+        
+        /* Button styling improvements */
+        .btn-group .btn {
+            margin-right: 2px;
+            border-radius: 6px !important;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-group .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .btn-group .btn:last-child {
+            margin-right: 0;
+        }
     </style>
 </head>
 <body>
@@ -537,14 +554,14 @@
                     <div class="notification-form-card">
                         <h4 class="form-section-title">
                             <i class="bi bi-list-check"></i>
-                            Danh Sách Thông Báo Đã Lên Lịch
+                            Danh Sách Tất Cả Thông Báo Đã Lên Lịch
                         </h4>
                         
                         <div id="scheduledList">
                             <div th:if="${#lists.isEmpty(pendingScheduled)}" 
                                  class="text-center text-muted py-5">
                                 <i class="bi bi-calendar-x" style="font-size: 48px;"></i>
-                                <p class="mt-3">Không có thông báo nào đang chờ gửi</p>
+                                <p class="mt-3">Chưa có thông báo nào được lên lịch</p>
                             </div>
                             
                             <div th:each="scheduled : ${pendingScheduled}" class="scheduled-item">
@@ -557,6 +574,14 @@
                                                   th:text="${scheduled.notificationType}"></span>
                                             <span class="badge badge-custom bg-info" 
                                                   th:text="${scheduled.targetAudience}"></span>
+                                            <span class="badge badge-custom" 
+                                                  th:classappend="${scheduled.status.name() == 'PENDING'} ? 'bg-warning text-dark' : 'bg-secondary'"
+                                                  th:if="${scheduled.status.name() == 'PENDING' or scheduled.status.name() == 'CANCELLED'}">
+                                                <span th:text="${scheduled.status.name() == 'PENDING'} ? 'Đang chờ' : 'Đã hủy'"></span>
+                                            </span>
+                                            <span class="badge badge-custom bg-success" th:if="${scheduled.status.name() == 'SENT'}">
+                                                <span>Đã gửi</span>
+                                            </span>
                                             <span class="badge badge-custom bg-warning text-dark">
                                                 <i class="bi bi-calendar-event"></i>
                                                 <span th:text="${#temporals.format(scheduled.scheduledTime, 'dd/MM/yyyy HH:mm')}"></span>
@@ -564,10 +589,30 @@
                                         </div>
                                     </div>
                                     <div>
-                                        <button class="btn btn-sm btn-danger" 
-                                                th:onclick="'cancelScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
-                                            <i class="bi bi-x-circle"></i> Hủy
-                                        </button>
+                                        <div class="btn-group" role="group">
+                                            <!-- Chỉnh sửa - luôn hiện -->
+                                            <button class="btn btn-sm btn-warning" 
+                                                    th:onclick="'editScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                                <i class="bi bi-pencil"></i> Sửa
+                                            </button>
+                                            <!-- Xóa - luôn hiện -->
+                                            <button class="btn btn-sm btn-danger" 
+                                                    th:onclick="'deleteScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                                <i class="bi bi-trash"></i> Xóa
+                                            </button>
+                                            <!-- Hủy - chỉ hiện khi PENDING -->
+                                            <button class="btn btn-sm btn-secondary" 
+                                                    th:if="${scheduled.status.name() == 'PENDING'}"
+                                                    th:onclick="'cancelScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                                <i class="bi bi-x-circle"></i> Hủy
+                                            </button>
+                                            <!-- Kích hoạt - chỉ hiện khi CANCELLED -->
+                                            <button class="btn btn-sm btn-success" 
+                                                    th:if="${scheduled.status.name() == 'CANCELLED'}"
+                                                    th:onclick="'activateScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                                <i class="bi bi-play-circle"></i> Kích hoạt
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -576,6 +621,124 @@
                 </div>
             </div>
         </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Scheduled Notification Modal -->
+    <div class="modal fade" id="editScheduledModal" tabindex="-1" aria-labelledby="editScheduledModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editScheduledModalLabel">
+                        <i class="bi bi-pencil-square"></i> Chỉnh Sửa Thông Báo Đã Lên Lịch
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editScheduledForm">
+                        <input type="hidden" id="editScheduledId">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-card-heading"></i> Tiêu Đề *
+                                    </label>
+                                    <input type="text" class="form-control" id="editTitle" required>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-text-paragraph"></i> Nội Dung *
+                                    </label>
+                                    <textarea class="form-control" id="editBody" rows="4" required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-image"></i> URL Hình Ảnh
+                                    </label>
+                                    <input type="url" class="form-control" id="editImageUrl">
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-calendar-event"></i> Thời Gian Gửi *
+                                    </label>
+                                    <input type="datetime-local" class="form-control" id="editScheduledTime" required>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-tag"></i> Loại Thông Báo *
+                                    </label>
+                                    <select class="form-select" id="editNotificationType" required>
+                                        <option th:each="type : ${notificationTypes}" 
+                                                th:value="${type}" 
+                                                th:text="${type}"></option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-people"></i> Đối Tượng Nhận *
+                                    </label>
+                                    <select class="form-select" id="editTargetAudience" required
+                                            onchange="updateTargetCriteriaHelp('edit')">
+                                        <option th:each="audience : ${targetAudiences}" 
+                                                th:value="${audience}" 
+                                                th:text="${#strings.replace(audience, '_', ' ')}"></option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3" id="editTargetCriteriaDiv">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-filter"></i> Điều Kiện Lọc
+                                    </label>
+                                    <input type="text" class="form-control" id="editTargetCriteria">
+                                    <div id="editTargetCriteriaHelp" class="form-text"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Data Payload -->
+                        <div class="data-payload-section">
+                            <h6 class="fw-bold mb-3">
+                                <i class="bi bi-code-square"></i> Data Payload (Tùy chọn)
+                            </h6>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="form-label small">Key 1</label>
+                                        <input type="text" class="form-control form-control-sm" id="editDataKey1">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Value 1</label>
+                                        <input type="text" class="form-control form-control-sm" id="editDataValue1">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-2">
+                                        <label class="form-label small">Key 2</label>
+                                        <input type="text" class="form-control form-control-sm" id="editDataKey2">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="form-label small">Value 2</label>
+                                        <input type="text" class="form-control form-control-sm" id="editDataValue2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" form="editScheduledForm" class="btn btn-gradient-primary">
+                        <i class="bi bi-check-circle"></i> Cập Nhật
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -754,8 +917,7 @@
             if (result.isConfirmed) {
                 try {
                     const response = await fetch(`/admin/notifications/cancel/${id}`, {
-                        method: "POST",
-                        body: formData
+                        method: "POST"
                     });
                     
                     const data = await response.json();
@@ -782,6 +944,222 @@
                         icon: "error",
                         title: "Lỗi!",
                         text: "Có lỗi xảy ra khi hủy thông báo",
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            }
+        }
+
+        // Edit scheduled notification
+        async function editScheduled(id) {
+            try {
+                // Fetch current notification data
+                const response = await fetch(`/admin/notifications/scheduled/${id}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const notification = data.notification;
+                    
+                    // Populate modal with data
+                    document.getElementById('editScheduledId').value = notification.scheduledNotificationId;
+                    document.getElementById('editTitle').value = notification.title;
+                    document.getElementById('editBody').value = notification.body;
+                    document.getElementById('editImageUrl').value = notification.imageUrl || '';
+                    document.getElementById('editNotificationType').value = notification.notificationType;
+                    document.getElementById('editTargetAudience').value = notification.targetAudience;
+                    document.getElementById('editTargetCriteria').value = notification.targetCriteria || '';
+                    
+                    // Format scheduled time for datetime-local input
+                    const scheduledTime = new Date(notification.scheduledTime);
+                    const formattedTime = scheduledTime.toISOString().slice(0, 16);
+                    document.getElementById('editScheduledTime').value = formattedTime;
+                    
+                    // Populate data payload if exists
+                    if (notification.dataPayload) {
+                        const dataPayload = JSON.parse(notification.dataPayload);
+                        const keys = Object.keys(dataPayload);
+                        if (keys.length > 0) {
+                            document.getElementById('editDataKey1').value = keys[0];
+                            document.getElementById('editDataValue1').value = dataPayload[keys[0]];
+                        }
+                        if (keys.length > 1) {
+                            document.getElementById('editDataKey2').value = keys[1];
+                            document.getElementById('editDataValue2').value = dataPayload[keys[1]];
+                        }
+                    }
+                    
+                    // Update target criteria help
+                    updateTargetCriteriaHelp('edit');
+                    
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('editScheduledModal'));
+                    modal.show();
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: data.message,
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi!",
+                    text: "Có lỗi xảy ra khi tải dữ liệu",
+                    confirmButtonColor: "#667eea"
+                });
+            }
+        }
+
+        // Edit scheduled form handler
+        document.getElementById("editScheduledForm").addEventListener("submit", async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append("title", document.getElementById("editTitle").value);
+            formData.append("body", document.getElementById("editBody").value);
+            formData.append("imageUrl", document.getElementById("editImageUrl").value);
+            formData.append("notificationType", document.getElementById("editNotificationType").value);
+            formData.append("targetAudience", document.getElementById("editTargetAudience").value);
+            formData.append("targetCriteria", document.getElementById("editTargetCriteria").value);
+            formData.append("scheduledTime", document.getElementById("editScheduledTime").value);
+            formData.append("dataKey1", document.getElementById("editDataKey1").value);
+            formData.append("dataValue1", document.getElementById("editDataValue1").value);
+            formData.append("dataKey2", document.getElementById("editDataKey2").value);
+            formData.append("dataValue2", document.getElementById("editDataValue2").value);
+            
+            const id = document.getElementById("editScheduledId").value;
+            
+            try {
+                const response = await fetch(`/admin/notifications/update/${id}`, {
+                    method: "PUT",
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Thành công!",
+                        text: "Đã cập nhật thông báo",
+                        confirmButtonColor: "#667eea"
+                    }).then(() => {
+                        // Close modal and reload page
+                        bootstrap.Modal.getInstance(document.getElementById('editScheduledModal')).hide();
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: result.message,
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi!",
+                    text: "Có lỗi xảy ra khi cập nhật",
+                    confirmButtonColor: "#667eea"
+                });
+            }
+        });
+
+        // Delete scheduled notification
+        async function deleteScheduled(id) {
+            const result = await Swal.fire({
+                title: "Xác nhận xóa?",
+                text: "Bạn có chắc muốn xóa vĩnh viễn thông báo đã lên lịch này? Hành động này không thể hoàn tác.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#667eea",
+                confirmButtonText: "Xóa vĩnh viễn",
+                cancelButtonText: "Đóng"
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/notifications/delete/${id}`, {
+                        method: "DELETE"
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Đã xóa!",
+                            text: "Thông báo đã được xóa vĩnh viễn",
+                            confirmButtonColor: "#667eea"
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi!",
+                            text: data.message,
+                            confirmButtonColor: "#667eea"
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: "Có lỗi xảy ra khi xóa thông báo",
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            }
+        }
+
+        // Activate scheduled notification
+        async function activateScheduled(id) {
+            const result = await Swal.fire({
+                title: "Xác nhận kích hoạt?",
+                text: "Bạn có chắc muốn kích hoạt lại thông báo đã lên lịch này?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#667eea",
+                confirmButtonText: "Kích hoạt",
+                cancelButtonText: "Đóng"
+            });
+            
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/notifications/activate/${id}`, {
+                        method: "POST"
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Đã kích hoạt!",
+                            text: "Thông báo đã được kích hoạt lại",
+                            confirmButtonColor: "#667eea"
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi!",
+                            text: data.message,
+                            confirmButtonColor: "#667eea"
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: "Có lỗi xảy ra khi kích hoạt thông báo",
                         confirmButtonColor: "#667eea"
                     });
                 }

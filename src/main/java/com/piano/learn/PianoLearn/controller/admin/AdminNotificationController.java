@@ -12,9 +12,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -63,7 +65,7 @@ public class AdminNotificationController {
         
         // Lấy scheduled notifications
         List<ScheduledNotification> pendingScheduled = 
-            adminNotificationService.getScheduledNotifications(ScheduleStatus.PENDING);
+            adminNotificationService.getAllScheduledNotifications();
         model.addAttribute("pendingScheduled", pendingScheduled);
         
         // Lấy danh sách users để chọn
@@ -144,6 +146,9 @@ public class AdminNotificationController {
             @RequestParam(required = false) String dataKey2,
             @RequestParam(required = false) String dataValue2) {
         
+        System.out.println("=== Controller Schedule Debug ===");
+        System.out.println("Received scheduledTime: " + scheduledTime);
+        
         try {
             Integer adminId = getCurrentUserId();
             
@@ -192,6 +197,120 @@ public class AdminNotificationController {
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", "Không tìm thấy thông báo"
+            ));
+        }
+    }
+    
+    /**
+     * Xóa scheduled notification vĩnh viễn
+     */
+    @DeleteMapping("/delete/{scheduledId}")
+    @ResponseBody
+    public ResponseEntity<?> deleteScheduledNotification(@PathVariable Integer scheduledId) {
+        boolean deleted = adminNotificationService.deleteScheduledNotification(scheduledId);
+        
+        if (deleted) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã xóa thông báo thành công"
+            ));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Không tìm thấy thông báo"
+            ));
+        }
+    }
+    
+    /**
+     * Kích hoạt lại scheduled notification
+     */
+    @PostMapping("/activate/{scheduledId}")
+    @ResponseBody
+    public ResponseEntity<?> activateScheduledNotification(@PathVariable Integer scheduledId) {
+        boolean activated = adminNotificationService.activateScheduledNotification(scheduledId);
+        
+        if (activated) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "Đã kích hoạt thông báo thành công"
+            ));
+        } else {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Không tìm thấy thông báo hoặc không thể kích hoạt"
+            ));
+        }
+    }
+    
+    /**
+     * Lấy thông tin scheduled notification để edit
+     */
+    @GetMapping("/scheduled/{scheduledId}")
+    @ResponseBody
+    public ResponseEntity<?> getScheduledNotification(@PathVariable Integer scheduledId) {
+        ScheduledNotification notification = adminNotificationService.getScheduledNotificationById(scheduledId);
+        
+        if (notification != null) {
+            return ResponseEntity.ok(Map.of(
+                "success", true,
+                "notification", notification
+            ));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * Cập nhật scheduled notification
+     */
+    @PutMapping("/update/{scheduledId}")
+    @ResponseBody
+    public ResponseEntity<?> updateScheduledNotification(
+            @PathVariable Integer scheduledId,
+            @RequestParam String title,
+            @RequestParam String body,
+            @RequestParam(required = false) String imageUrl,
+            @RequestParam NotificationType notificationType,
+            @RequestParam TargetAudience targetAudience,
+            @RequestParam(required = false) String targetCriteria,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime scheduledTime,
+            @RequestParam(required = false) String dataKey1,
+            @RequestParam(required = false) String dataValue1,
+            @RequestParam(required = false) String dataKey2,
+            @RequestParam(required = false) String dataValue2) {
+        
+        try {
+            // Build data payload
+            Map<String, String> dataPayload = new HashMap<>();
+            if (dataKey1 != null && !dataKey1.isEmpty()) {
+                dataPayload.put(dataKey1, dataValue1 != null ? dataValue1 : "");
+            }
+            if (dataKey2 != null && !dataKey2.isEmpty()) {
+                dataPayload.put(dataKey2, dataValue2 != null ? dataValue2 : "");
+            }
+            
+            boolean updated = adminNotificationService.updateScheduledNotification(
+                scheduledId, title, body, imageUrl, notificationType,
+                targetAudience, targetCriteria, scheduledTime, dataPayload
+            );
+            
+            if (updated) {
+                return ResponseEntity.ok(Map.of(
+                    "success", true,
+                    "message", "Đã cập nhật thông báo thành công"
+                ));
+            } else {
+                return ResponseEntity.badRequest().body(Map.of(
+                    "success", false,
+                    "message", "Không tìm thấy thông báo"
+                ));
+            }
+            
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                "success", false,
+                "message", "Lỗi cập nhật: " + e.getMessage()
             ));
         }
     }

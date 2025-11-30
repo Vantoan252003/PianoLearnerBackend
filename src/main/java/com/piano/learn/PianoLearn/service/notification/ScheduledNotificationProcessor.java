@@ -50,6 +50,9 @@ public class ScheduledNotificationProcessor {
     public void processScheduledNotifications() {
         LocalDateTime now = LocalDateTime.now();
         
+        System.out.println("=== Scheduled Notification Processor Debug ===");
+        System.out.println("Current time (now): " + now);
+        
         // Lấy tất cả notifications cần gửi
         List<ScheduledNotification> pendingNotifications = 
             scheduledNotificationRepository.findByStatusAndScheduledTimeLessThanEqualOrderByScheduledTimeAsc(
@@ -58,6 +61,15 @@ public class ScheduledNotificationProcessor {
             );
         
         System.out.println("Found " + pendingNotifications.size() + " scheduled notifications to send");
+        
+        // Debug: In ra tất cả scheduled notifications để kiểm tra
+        List<ScheduledNotification> allPending = scheduledNotificationRepository.findAll().stream()
+            .filter(s -> s.getStatus() == ScheduleStatus.PENDING)
+            .toList();
+        System.out.println("Total PENDING notifications in DB: " + allPending.size());
+        for (ScheduledNotification s : allPending) {
+            System.out.println("  - ID: " + s.getScheduledNotificationId() + ", ScheduledTime: " + s.getScheduledTime() + ", Title: " + s.getTitle());
+        }
         
         for (ScheduledNotification scheduled : pendingNotifications) {
             try {
