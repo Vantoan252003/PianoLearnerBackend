@@ -1,6 +1,8 @@
 package com.piano.learn.PianoLearn.controller.admin;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,10 +146,25 @@ public class AdminNotificationController {
             @RequestParam(required = false) String dataKey1,
             @RequestParam(required = false) String dataValue1,
             @RequestParam(required = false) String dataKey2,
-            @RequestParam(required = false) String dataValue2) {
+            @RequestParam(required = false) String dataValue2,
+            // Recurring parameters
+            @RequestParam(required = false, defaultValue = "false") Boolean isRecurring,
+            @RequestParam(required = false) String recurrenceType,
+            @RequestParam(required = false) String recurrenceTime,
+            @RequestParam(required = false) String recurrenceDays) {
         
         System.out.println("=== Controller Schedule Debug ===");
         System.out.println("Received scheduledTime: " + scheduledTime);
+        System.out.println("isRecurring: " + isRecurring);
+        System.out.println("recurrenceType: " + recurrenceType);
+        System.out.println("recurrenceTime: " + recurrenceTime);
+        System.out.println("recurrenceDays: " + recurrenceDays);
+        
+        // Convert scheduledTime from user's timezone (+7) to UTC
+        ZonedDateTime userZonedTime = scheduledTime.atZone(ZoneId.of("+07:00")); // Asia/Ho_Chi_Minh or Bangkok
+        LocalDateTime utcScheduledTime = userZonedTime.withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+        System.out.println("User timezone (+7): " + userZonedTime);
+        System.out.println("Converted to UTC: " + utcScheduledTime);
         
         try {
             Integer adminId = getCurrentUserId();
@@ -163,7 +180,8 @@ public class AdminNotificationController {
             
             ScheduledNotification scheduled = adminNotificationService.scheduleNotification(
                 adminId, title, body, imageUrl, notificationType,
-                targetAudience, targetCriteria, scheduledTime, dataPayload
+                targetAudience, targetCriteria, utcScheduledTime, dataPayload,
+                isRecurring, recurrenceType, recurrenceTime, recurrenceDays
             );
             
             return ResponseEntity.ok(Map.of(
@@ -252,9 +270,27 @@ public class AdminNotificationController {
         ScheduledNotification notification = adminNotificationService.getScheduledNotificationById(scheduledId);
         
         if (notification != null) {
+            // Convert UTC scheduledTime to user's timezone (+7) for display
+            ZonedDateTime utcTime = notification.getScheduledTime().atZone(ZoneId.of("UTC"));
+            ZonedDateTime userTime = utcTime.withZoneSameInstant(ZoneId.of("+07:00"));
+            LocalDateTime userScheduledTime = userTime.toLocalDateTime();
+            
+            // Create response map with converted time
+            Map<String, Object> response = new HashMap<>();
+            response.put("scheduledNotificationId", notification.getScheduledNotificationId());
+            response.put("title", notification.getTitle());
+            response.put("body", notification.getBody());
+            response.put("imageUrl", notification.getImageUrl());
+            response.put("notificationType", notification.getNotificationType());
+            response.put("targetAudience", notification.getTargetAudience());
+            response.put("targetCriteria", notification.getTargetCriteria());
+            response.put("scheduledTime", userScheduledTime); // Converted to +7 timezone
+            response.put("status", notification.getStatus());
+            response.put("dataPayload", notification.getDataPayload());
+            
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "notification", notification
+                "notification", response
             ));
         } else {
             return ResponseEntity.notFound().build();
@@ -280,6 +316,10 @@ public class AdminNotificationController {
             @RequestParam(required = false) String dataKey2,
             @RequestParam(required = false) String dataValue2) {
         
+        // Convert scheduledTime from user's timezone (+7) to UTC
+        ZonedDateTime userZonedTime = scheduledTime.atZone(ZoneId.of("+07:00"));
+        LocalDateTime utcScheduledTime = userZonedTime.withZoneSameInstant(ZoneId.of("UTC")).toLocalDateTime();
+        
         try {
             // Build data payload
             Map<String, String> dataPayload = new HashMap<>();
@@ -292,7 +332,7 @@ public class AdminNotificationController {
             
             boolean updated = adminNotificationService.updateScheduledNotification(
                 scheduledId, title, body, imageUrl, notificationType,
-                targetAudience, targetCriteria, scheduledTime, dataPayload
+                targetAudience, targetCriteria, utcScheduledTime, dataPayload
             );
             
             if (updated) {

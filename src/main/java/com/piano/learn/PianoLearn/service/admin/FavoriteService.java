@@ -103,7 +103,6 @@ public class FavoriteService {
                 .build();
             favoriteRepository.save(favorite);
             
-            // Gửi thông báo cho owner của sheet music
             if (sheetMusic.getUploadedBy() != null) {
                 notificationService.notifyOnSheetFavorited(
                     sheetMusic.getUploadedBy().getUserId(), 

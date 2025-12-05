@@ -65,6 +65,24 @@ public class ScheduledNotification {
     @Column(name = "scheduled_time", nullable = false)
     private LocalDateTime scheduledTime;
     
+    // Tính năng gửi định kỳ
+    @Column(name = "is_recurring")
+    @Builder.Default
+    private Boolean isRecurring = false;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "recurrence_type", length = 20)
+    private RecurrenceType recurrenceType;
+    
+    @Column(name = "recurrence_days", length = 100)
+    private String recurrenceDays; // JSON array: [1,2,3,4,5] cho Monday-Friday
+    
+    @Column(name = "recurrence_time", length = 10)
+    private String recurrenceTime; // HH:mm format (e.g., "09:00")
+    
+    @Column(name = "last_sent_at")
+    private LocalDateTime lastSentAt;
+    
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
     @Builder.Default
@@ -94,5 +112,12 @@ public class ScheduledNotification {
         SENT,      // Đã gửi
         CANCELLED, // Đã hủy
         FAILED     // Gửi thất bại
+    }
+    
+    public enum RecurrenceType {
+        ONCE,      // Gửi một lần (mặc định)
+        DAILY,     // Gửi hàng ngày
+        WEEKLY,    // Gửi hàng tuần (theo các ngày được chọn)
+        MONTHLY    // Gửi hàng tháng (cùng ngày mỗi tháng)
     }
 }

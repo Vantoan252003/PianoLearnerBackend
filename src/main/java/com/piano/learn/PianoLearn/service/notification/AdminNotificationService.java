@@ -116,13 +116,31 @@ public class AdminNotificationService {
             TargetAudience targetAudience,
             String targetCriteria,
             LocalDateTime scheduledTime,
-            Map<String, String> dataPayload) {
+            Map<String, String> dataPayload,
+            Boolean isRecurring,
+            String recurrenceTypeStr,
+            String recurrenceTime,
+            String recurrenceDays) {
         
         System.out.println("=== Schedule Notification Debug ===");
         System.out.println("ScheduledTime received: " + scheduledTime);
         System.out.println("Current time: " + LocalDateTime.now());
+        System.out.println("isRecurring: " + isRecurring);
+        System.out.println("recurrenceType: " + recurrenceTypeStr);
+        System.out.println("recurrenceTime: " + recurrenceTime);
+        System.out.println("recurrenceDays: " + recurrenceDays);
         
         User admin = User.builder().userId(adminId).build();
+        
+        // Parse recurrence type
+        ScheduledNotification.RecurrenceType recurrenceType = null;
+        if (recurrenceTypeStr != null && !recurrenceTypeStr.isEmpty()) {
+            try {
+                recurrenceType = ScheduledNotification.RecurrenceType.valueOf(recurrenceTypeStr);
+            } catch (IllegalArgumentException e) {
+                System.err.println("Invalid recurrence type: " + recurrenceTypeStr);
+            }
+        }
         
         ScheduledNotification scheduled = ScheduledNotification.builder()
                 .title(title)
@@ -135,12 +153,39 @@ public class AdminNotificationService {
                 .dataPayload(convertMapToJson(dataPayload))
                 .createdBy(admin)
                 .status(ScheduleStatus.PENDING)
+                .isRecurring(isRecurring != null ? isRecurring : false)
+                .recurrenceType(recurrenceType)
+                .recurrenceTime(recurrenceTime)
+                .recurrenceDays(recurrenceDays)
                 .build();
         
         ScheduledNotification saved = scheduledNotificationRepository.save(scheduled);
-        System.out.println("Saved scheduled notification with ID: " + saved.getScheduledNotificationId() + ", ScheduledTime: " + saved.getScheduledTime());
+        System.out.println("Saved scheduled notification with ID: " + saved.getScheduledNotificationId() 
+            + ", ScheduledTime: " + saved.getScheduledTime()
+            + ", isRecurring: " + saved.getIsRecurring()
+            + ", recurrenceType: " + saved.getRecurrenceType());
         
         return saved;
+    }
+    
+    /**
+     * Đặt lịch gửi thông báo (overload method cũ để tương thích ngược)
+     */
+    @Transactional
+    public ScheduledNotification scheduleNotification(
+            Integer adminId,
+            String title,
+            String body,
+            String imageUrl,
+            NotificationType type,
+            TargetAudience targetAudience,
+            String targetCriteria,
+            LocalDateTime scheduledTime,
+            Map<String, String> dataPayload) {
+        
+        return scheduleNotification(adminId, title, body, imageUrl, type, 
+            targetAudience, targetCriteria, scheduledTime, dataPayload,
+            false, "ONCE", null, null);
     }
     
     private List<User> getTargetUsers(TargetAudience targetAudience, String targetCriteria) {
@@ -324,6 +369,53 @@ public class AdminNotificationService {
             return objectMapper.writeValueAsString(map);
         } catch (JsonProcessingException e) {
             return null;
+        }
+    }
+    
+    /**
+     * Gửi scheduled notification ngay lập tức (được gọi bởi scheduler)
+     * Method này được sử dụng bởi RecurringNotificationScheduler
+     */
+    @Transactional
+    public void sendScheduledNotificationNow(ScheduledNotification scheduled) {
+        try {
+            // Gửi notification dựa trên target audience
+            Notification notification = sendImmediateNotification(
+                scheduled.getCreatedBy() != null ? scheduled.getCreatedBy().getUserId() : null,
+                scheduled.getTitle(),
+                scheduled.getBody(),
+                scheduled.getImageUrl(),
+                scheduled.getNotificationType(),
+                scheduled.getTargetAudience(),
+                scheduled.getTargetCriteria(),
+                parseJsonToMap(scheduled.getDataPayload())
+            );
+            
+            System.out.println("Successfully sent scheduled notification: " + 
+                scheduled.getScheduledNotificationId() + " with result: " + 
+                notification.getNotificationId());
+                
+        } catch (Exception e) {
+            System.err.println("Failed to send scheduled notification: " + 
+                scheduled.getScheduledNotificationId());
+            e.printStackTrace();
+            throw e;
+        }
+    }
+    
+    /**
+     * Parse JSON string to Map
+     */
+    private Map<String, String> parseJsonToMap(String json) {
+        if (json == null || json.isEmpty()) {
+            return new HashMap<>();
+        }
+        try {
+            return objectMapper.readValue(json, 
+                objectMapper.getTypeFactory().constructMapType(Map.class, String.class, String.class));
+        } catch (JsonProcessingException e) {
+            System.err.println("Error parsing JSON to Map: " + e.getMessage());
+            return new HashMap<>();
         }
     }
 }

@@ -37,7 +37,9 @@ public class SecurityConfig {
                 // Static resources - allowed without authentication
                 .requestMatchers("/admin-script.js", "/css/**", "/js/**", "/images/**").permitAll()
                 // Public endpoints - login and register
-                .requestMatchers("/", "/index", "/api/auth/login", "/api/auth/register", "/api/auth/checkmail", "/admin/login", "/api/auth/ranking","/about","/features","/download","/contact","/pricing").permitAll()
+                .requestMatchers("/", "/index", "/api/auth/login", "/api/auth/register", "/api/auth/checkmail",
+                 "/admin/login", "/api/auth/ranking","/about","/features","/download","/contact","/pricing", 
+                 "api/auth/forgot-password", "api/auth/verify-otp", "api/auth/reset-password").permitAll()
                 .requestMatchers("/admin/**").authenticated()
                 // Admin API endpoints - require ADMIN role
                 .requestMatchers("/api/admin/**").hasAuthority("admin")

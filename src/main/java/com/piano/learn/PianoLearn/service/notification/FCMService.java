@@ -153,17 +153,12 @@ public class FCMService {
         
         return CompletableFuture.completedFuture(null);
     }
-    
-    /**
-     * Lấy tất cả token của user
-     */
+
     public List<FCMToken> getUserTokens(Integer userId) {
         return fcmTokenRepository.findByUser_UserId(userId);
     }
     
-    /**
-     * Lấy tất cả token active của user
-     */
+
     public List<FCMToken> getUserActiveTokens(Integer userId) {
         return fcmTokenRepository.findByUser_UserIdAndIsActiveTrue(userId);
     }

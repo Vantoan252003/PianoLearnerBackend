@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,6 +25,9 @@ public class AdminUserController {
     @Autowired
     private UserRepository userRepository;
     
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    
     @GetMapping
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(userRepository.findAll());
@@ -38,6 +42,10 @@ public class AdminUserController {
     
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
+        // Encode password nếu có
+        if (user.getPasswordHash() != null && !user.getPasswordHash().isEmpty()) {
+            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        }
         User saved = userRepository.save(user);
         return ResponseEntity.ok(saved);
     }
@@ -48,6 +56,16 @@ public class AdminUserController {
             return ResponseEntity.notFound().build();
         }
         user.setUserId(id);
+        
+        // Encode password nếu có và không rỗng
+        if (user.getPasswordHash() != null && !user.getPasswordHash().isEmpty()) {
+            user.setPasswordHash(passwordEncoder.encode(user.getPasswordHash()));
+        } else {
+            // Nếu không nhập password, giữ password cũ
+            User existingUser = userRepository.findById(id).orElseThrow();
+            user.setPasswordHash(existingUser.getPasswordHash());
+        }
+        
         User updated = userRepository.save(user);
         return ResponseEntity.ok(updated);
     }
@@ -65,6 +83,12 @@ public class AdminUserController {
     public ResponseEntity<User> createAdminUser(@RequestBody User adminUser) {
         // Set role to admin
         adminUser.setRole(Role.admin);
+        
+        // Encode password
+        if (adminUser.getPasswordHash() != null && !adminUser.getPasswordHash().isEmpty()) {
+            adminUser.setPasswordHash(passwordEncoder.encode(adminUser.getPasswordHash()));
+        }
+        
         User saved = userRepository.save(adminUser);
         return ResponseEntity.ok(saved);
     }

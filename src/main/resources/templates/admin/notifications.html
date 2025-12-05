@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,7 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
     <style>
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -15,31 +17,42 @@
             --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
-        
+
         body {
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         .stats-card {
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             transition: all 0.3s;
             border-left: 5px solid;
         }
-        
+
         .stats-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
-        
-        .stats-card.primary { border-color: #667eea; }
-        .stats-card.success { border-color: #38ef7d; }
-        .stats-card.warning { border-color: #f5576c; }
-        .stats-card.info { border-color: #00f2fe; }
-        
+
+        .stats-card.primary {
+            border-color: #667eea;
+        }
+
+        .stats-card.success {
+            border-color: #38ef7d;
+        }
+
+        .stats-card.warning {
+            border-color: #f5576c;
+        }
+
+        .stats-card.info {
+            border-color: #00f2fe;
+        }
+
         .stats-icon {
             width: 60px;
             height: 60px;
@@ -50,20 +63,31 @@
             font-size: 24px;
             color: white;
         }
-        
-        .stats-icon.primary { background: var(--primary-gradient); }
-        .stats-icon.success { background: var(--success-gradient); }
-        .stats-icon.warning { background: var(--warning-gradient); }
-        .stats-icon.info { background: var(--info-gradient); }
-        
+
+        .stats-icon.primary {
+            background: var(--primary-gradient);
+        }
+
+        .stats-icon.success {
+            background: var(--success-gradient);
+        }
+
+        .stats-icon.warning {
+            background: var(--warning-gradient);
+        }
+
+        .stats-icon.info {
+            background: var(--info-gradient);
+        }
+
         .notification-form-card {
             background: white;
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
         }
-        
+
         .form-section-title {
             font-weight: 700;
             color: #667eea;
@@ -74,7 +98,7 @@
             align-items: center;
             gap: 10px;
         }
-        
+
         .btn-gradient-primary {
             background: var(--primary-gradient);
             border: none;
@@ -84,12 +108,12 @@
             font-weight: 600;
             transition: all 0.3s;
         }
-        
+
         .btn-gradient-primary:hover {
             transform: scale(1.05);
             box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
-        
+
         .btn-gradient-success {
             background: var(--success-gradient);
             border: none;
@@ -98,7 +122,7 @@
             border-radius: 25px;
             font-weight: 600;
         }
-        
+
         .tab-button {
             background: transparent;
             border: 2px solid #667eea;
@@ -109,60 +133,62 @@
             transition: all 0.3s;
             margin: 0 5px;
         }
-        
+
         .tab-button.active {
             background: var(--primary-gradient);
             color: white;
             border-color: transparent;
         }
-        
+
         .scheduled-item {
             background: white;
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             border-left: 4px solid #667eea;
         }
-        
+
         .history-item {
             background: white;
             border-radius: 10px;
             padding: 15px;
             margin-bottom: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
-        
+
         .badge-custom {
             padding: 5px 15px;
             border-radius: 20px;
             font-weight: 600;
         }
-        
-        .form-control, .form-select {
+
+        .form-control,
+        .form-select {
             border-radius: 10px;
             border: 2px solid #e0e0e0;
             padding: 10px 15px;
         }
-        
-        .form-control:focus, .form-select:focus {
+
+        .form-control:focus,
+        .form-select:focus {
             border-color: #667eea;
             box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
         }
-        
+
         .data-payload-section {
             background: #f8f9fa;
             border-radius: 10px;
             padding: 15px;
             margin-top: 15px;
         }
-        
+
         #targetCriteriaHelp {
             font-size: 0.875rem;
             color: #6c757d;
             margin-top: 5px;
         }
-        
+
         /* Button styling improvements */
         .btn-group .btn {
             margin-right: 2px;
@@ -170,17 +196,18 @@
             font-weight: 500;
             transition: all 0.2s ease;
         }
-        
+
         .btn-group .btn:hover {
             transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .btn-group .btn:last-child {
             margin-right: 0;
         }
     </style>
 </head>
+
 <body>
     <div th:replace="~{admin/layout :: layout(~{::main}, 'notifications')}">
         <main>
@@ -211,7 +238,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <div class="stats-card success">
                             <div class="d-flex justify-content-between align-items-center">
@@ -225,7 +252,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <div class="stats-card warning">
                             <div class="d-flex justify-content-between align-items-center">
@@ -239,7 +266,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-3">
                         <div class="stats-card info">
                             <div class="d-flex justify-content-between align-items-center">
@@ -278,7 +305,7 @@
                             <i class="bi bi-send-fill"></i>
                             Gửi Thông Báo Ngay Lập Tức
                         </h4>
-                        
+
                         <form id="sendForm">
                             <div class="row">
                                 <div class="col-md-8">
@@ -287,62 +314,61 @@
                                             <i class="bi bi-card-heading"></i> Tiêu Đề *
                                         </label>
                                         <input type="text" class="form-control" id="sendTitle" required
-                                               placeholder="Nhập tiêu đề thông báo...">
+                                            placeholder="Nhập tiêu đề thông báo...">
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-text-paragraph"></i> Nội Dung *
                                         </label>
                                         <textarea class="form-control" id="sendBody" rows="4" required
-                                                  placeholder="Nhập nội dung thông báo..."></textarea>
+                                            placeholder="Nhập nội dung thông báo..."></textarea>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-image"></i> URL Hình Ảnh
                                         </label>
                                         <input type="url" class="form-control" id="sendImageUrl"
-                                               placeholder="https://example.com/image.jpg">
-                                        <small class="text-muted">Tùy chọn: URL hình ảnh hiển thị trong thông báo</small>
+                                            placeholder="https://example.com/image.jpg">
+                                        <small class="text-muted">Tùy chọn: URL hình ảnh hiển thị trong thông
+                                            báo</small>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-tag"></i> Loại Thông Báo *
                                         </label>
                                         <select class="form-select" id="sendNotificationType" required>
-                                            <option th:each="type : ${notificationTypes}" 
-                                                    th:value="${type}" 
-                                                    th:text="${type}"></option>
+                                            <option th:each="type : ${notificationTypes}" th:value="${type}"
+                                                th:text="${type}"></option>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-people"></i> Đối Tượng Nhận *
                                         </label>
-                                        <select class="form-select" id="sendTargetAudience" required 
-                                                onchange="updateTargetCriteriaHelp('send')">
-                                            <option th:each="audience : ${targetAudiences}" 
-                                                    th:value="${audience}" 
-                                                    th:text="${#strings.replace(audience, '_', ' ')}"></option>
+                                        <select class="form-select" id="sendTargetAudience" required
+                                            onchange="updateTargetCriteriaHelp('send')">
+                                            <option th:each="audience : ${targetAudiences}" th:value="${audience}"
+                                                th:text="${#strings.replace(audience, '_', ' ')}"></option>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="mb-3" id="sendTargetCriteriaDiv">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-filter"></i> Điều Kiện Lọc
                                         </label>
                                         <input type="text" class="form-control" id="sendTargetCriteria"
-                                               placeholder="Nhập điều kiện...">
+                                            placeholder="Nhập điều kiện...">
                                         <div id="sendTargetCriteriaHelp" class="form-text"></div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <!-- Data Payload Section -->
                             <div class="data-payload-section">
                                 <h6 class="fw-bold mb-3">
@@ -352,30 +378,30 @@
                                     <div class="col-md-6">
                                         <div class="mb-2">
                                             <label class="form-label small">Key 1</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="sendDataKey1" placeholder="type">
+                                            <input type="text" class="form-control form-control-sm" id="sendDataKey1"
+                                                placeholder="type">
                                         </div>
                                         <div class="mb-2">
                                             <label class="form-label small">Value 1</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="sendDataValue1" placeholder="announcement">
+                                            <input type="text" class="form-control form-control-sm" id="sendDataValue1"
+                                                placeholder="announcement">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-2">
                                             <label class="form-label small">Key 2</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="sendDataKey2" placeholder="id">
+                                            <input type="text" class="form-control form-control-sm" id="sendDataKey2"
+                                                placeholder="id">
                                         </div>
                                         <div class="mb-2">
                                             <label class="form-label small">Value 2</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="sendDataValue2" placeholder="123">
+                                            <input type="text" class="form-control form-control-sm" id="sendDataValue2"
+                                                placeholder="123">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="text-end mt-4">
                                 <button type="submit" class="btn btn-gradient-primary btn-lg">
                                     <i class="bi bi-send-fill"></i> Gửi Ngay
@@ -392,7 +418,7 @@
                             <i class="bi bi-calendar-plus-fill"></i>
                             Đặt Lịch Gửi Thông Báo
                         </h4>
-                        
+
                         <form id="scheduleForm">
                             <div class="row">
                                 <div class="col-md-8">
@@ -402,55 +428,52 @@
                                         </label>
                                         <input type="text" class="form-control" id="scheduleTitle" required>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-text-paragraph"></i> Nội Dung *
                                         </label>
                                         <textarea class="form-control" id="scheduleBody" rows="4" required></textarea>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-image"></i> URL Hình Ảnh
                                         </label>
                                         <input type="url" class="form-control" id="scheduleImageUrl">
                                     </div>
-                                    
-                                    <div class="mb-3">
+
+                                    <div class="mb-3" id="scheduleTimeDiv">
                                         <label class="form-label fw-bold">
-                                            <i class="bi bi-calendar-event"></i> Thời Gian Gửi *
+                                            <i class="bi bi-calendar-event"></i> Thời Gian Gửi <span id="scheduleTimeRequired">*</span>
                                         </label>
-                                        <input type="datetime-local" class="form-control" 
-                                               id="scheduleTime" required>
-                                        <small class="text-muted">Chọn thời gian muốn gửi thông báo</small>
+                                        <input type="datetime-local" class="form-control" id="scheduleTime">
+                                        <small class="text-muted" id="scheduleTimeHelp">Chọn thời gian muốn gửi thông báo</small>
                                     </div>
                                 </div>
-                                
+
                                 <div class="col-md-4">
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-tag"></i> Loại Thông Báo *
                                         </label>
                                         <select class="form-select" id="scheduleNotificationType" required>
-                                            <option th:each="type : ${notificationTypes}" 
-                                                    th:value="${type}" 
-                                                    th:text="${type}"></option>
+                                            <option th:each="type : ${notificationTypes}" th:value="${type}"
+                                                th:text="${type}"></option>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="mb-3">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-people"></i> Đối Tượng Nhận *
                                         </label>
                                         <select class="form-select" id="scheduleTargetAudience" required
-                                                onchange="updateTargetCriteriaHelp('schedule')">
-                                            <option th:each="audience : ${targetAudiences}" 
-                                                    th:value="${audience}" 
-                                                    th:text="${#strings.replace(audience, '_', ' ')}"></option>
+                                            onchange="updateTargetCriteriaHelp('schedule')">
+                                            <option th:each="audience : ${targetAudiences}" th:value="${audience}"
+                                                th:text="${#strings.replace(audience, '_', ' ')}"></option>
                                         </select>
                                     </div>
-                                    
+
                                     <div class="mb-3" id="scheduleTargetCriteriaDiv">
                                         <label class="form-label fw-bold">
                                             <i class="bi bi-filter"></i> Điều Kiện Lọc
@@ -460,7 +483,76 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
+                            <!-- Recurring Notification Section -->
+                            <div class="mb-4 p-3" style="background: #f8f9ff; border-radius: 10px; border-left: 4px solid #667eea;">
+                                <h6 class="fw-bold mb-3">
+                                    <i class="bi bi-arrow-repeat"></i> Gửi Định Kỳ
+                                </h6>
+                                
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Loại Lặp Lại *</label>
+                                            <select class="form-select" id="scheduleRecurrenceType" onchange="updateRecurrenceFields()">
+                                                <option value="ONCE">Gửi Một Lần</option>
+                                                <option value="DAILY">Hàng Ngày</option>
+                                                <option value="WEEKLY">Hàng Tuần</option>
+                                                <option value="MONTHLY">Hàng Tháng</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3" id="recurrenceTimeDiv" style="display: none;">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Giờ Gửi *</label>
+                                            <input type="time" class="form-control" id="scheduleRecurrenceTime">
+                                            <small class="text-muted">VD: 09:00</small>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-6" id="recurrenceDaysDiv" style="display: none;">
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Chọn Các Ngày *</label>
+                                            <div class="d-flex gap-2 flex-wrap">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="1" id="day1">
+                                                    <label class="form-check-label" for="day1">T2</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="2" id="day2">
+                                                    <label class="form-check-label" for="day2">T3</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="3" id="day3">
+                                                    <label class="form-check-label" for="day3">T4</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="4" id="day4">
+                                                    <label class="form-check-label" for="day4">T5</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="5" id="day5">
+                                                    <label class="form-check-label" for="day5">T6</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="6" id="day6">
+                                                    <label class="form-check-label" for="day6">T7</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" value="7" id="day7">
+                                                    <label class="form-check-label" for="day7">CN</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div id="recurrenceDescription" class="alert alert-info mb-0" style="display: none;">
+                                    <i class="bi bi-info-circle"></i> <span id="recurrenceDescriptionText"></span>
+                                </div>
+                            </div>
+
                             <!-- Data Payload -->
                             <div class="data-payload-section">
                                 <h6 class="fw-bold mb-3">
@@ -470,30 +562,30 @@
                                     <div class="col-md-6">
                                         <div class="mb-2">
                                             <label class="form-label small">Key 1</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="scheduleDataKey1">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="scheduleDataKey1">
                                         </div>
                                         <div class="mb-2">
                                             <label class="form-label small">Value 1</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="scheduleDataValue1">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="scheduleDataValue1">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="mb-2">
                                             <label class="form-label small">Key 2</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="scheduleDataKey2">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="scheduleDataKey2">
                                         </div>
                                         <div class="mb-2">
                                             <label class="form-label small">Value 2</label>
-                                            <input type="text" class="form-control form-control-sm" 
-                                                   id="scheduleDataValue2">
+                                            <input type="text" class="form-control form-control-sm"
+                                                id="scheduleDataValue2">
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div class="text-end mt-4">
                                 <button type="submit" class="btn btn-gradient-success btn-lg">
                                     <i class="bi bi-calendar-check"></i> Đặt Lịch
@@ -510,38 +602,37 @@
                             <i class="bi bi-clock-history"></i>
                             Lịch Sử Thông Báo Đã Gửi
                         </h4>
-                        
+
                         <div id="historyList">
-                            <div th:if="${#lists.isEmpty(recentNotifications)}" 
-                                 class="text-center text-muted py-5">
+                            <div th:if="${#lists.isEmpty(recentNotifications)}" class="text-center text-muted py-5">
                                 <i class="bi bi-inbox" style="font-size: 48px;"></i>
                                 <p class="mt-3">Chưa có lịch sử gửi thông báo</p>
                             </div>
-                            
+
                             <div th:each="notif : ${recentNotifications}" class="history-item">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1 fw-bold" th:text="${notif.title}"></h6>
                                         <p class="mb-2 text-muted" th:text="${notif.body}"></p>
                                         <div class="d-flex gap-2 flex-wrap">
-                                            <span class="badge badge-custom bg-primary" 
-                                                  th:text="${notif.notificationType}"></span>
-                                            <span class="badge badge-custom bg-info" 
-                                                  th:text="${notif.targetAudience}"></span>
+                                            <span class="badge badge-custom bg-primary"
+                                                th:text="${notif.notificationType}"></span>
+                                            <span class="badge badge-custom bg-info"
+                                                th:text="${notif.targetAudience}"></span>
                                             <span class="badge badge-custom bg-success">
-                                                <i class="bi bi-check"></i> 
+                                                <i class="bi bi-check"></i>
                                                 <span th:text="${notif.sentCount}"></span> gửi
                                             </span>
-                                            <span th:if="${notif.failedCount > 0}" 
-                                                  class="badge badge-custom bg-danger">
-                                                <i class="bi bi-x"></i> 
+                                            <span th:if="${notif.failedCount > 0}" class="badge badge-custom bg-danger">
+                                                <i class="bi bi-x"></i>
                                                 <span th:text="${notif.failedCount}"></span> lỗi
                                             </span>
                                         </div>
                                     </div>
                                     <div class="text-end text-muted small">
                                         <i class="bi bi-clock"></i>
-                                        <span th:text="${#temporals.format(notif.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                        <span
+                                            th:text="${#temporals.format(notif.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
                                     </div>
                                 </div>
                             </div>
@@ -556,60 +647,63 @@
                             <i class="bi bi-list-check"></i>
                             Danh Sách Tất Cả Thông Báo Đã Lên Lịch
                         </h4>
-                        
+
                         <div id="scheduledList">
-                            <div th:if="${#lists.isEmpty(pendingScheduled)}" 
-                                 class="text-center text-muted py-5">
+                            <div th:if="${#lists.isEmpty(pendingScheduled)}" class="text-center text-muted py-5">
                                 <i class="bi bi-calendar-x" style="font-size: 48px;"></i>
                                 <p class="mt-3">Chưa có thông báo nào được lên lịch</p>
                             </div>
-                            
+
                             <div th:each="scheduled : ${pendingScheduled}" class="scheduled-item">
                                 <div class="d-flex justify-content-between align-items-start">
                                     <div class="flex-grow-1">
                                         <h6 class="mb-1 fw-bold" th:text="${scheduled.title}"></h6>
                                         <p class="mb-2 text-muted" th:text="${scheduled.body}"></p>
                                         <div class="d-flex gap-2 flex-wrap">
-                                            <span class="badge badge-custom bg-primary" 
-                                                  th:text="${scheduled.notificationType}"></span>
-                                            <span class="badge badge-custom bg-info" 
-                                                  th:text="${scheduled.targetAudience}"></span>
-                                            <span class="badge badge-custom" 
-                                                  th:classappend="${scheduled.status.name() == 'PENDING'} ? 'bg-warning text-dark' : 'bg-secondary'"
-                                                  th:if="${scheduled.status.name() == 'PENDING' or scheduled.status.name() == 'CANCELLED'}">
-                                                <span th:text="${scheduled.status.name() == 'PENDING'} ? 'Đang chờ' : 'Đã hủy'"></span>
+                                            <span class="badge badge-custom bg-primary"
+                                                th:text="${scheduled.notificationType}"></span>
+                                            <span class="badge badge-custom bg-info"
+                                                th:text="${scheduled.targetAudience}"></span>
+                                            <span class="badge badge-custom"
+                                                th:classappend="${scheduled.status.name() == 'PENDING'} ? 'bg-warning text-dark' : 'bg-secondary'"
+                                                th:if="${scheduled.status.name() == 'PENDING' or scheduled.status.name() == 'CANCELLED'}">
+                                                <span
+                                                    th:text="${scheduled.status.name() == 'PENDING'} ? 'Đang chờ' : 'Đã hủy'"></span>
                                             </span>
-                                            <span class="badge badge-custom bg-success" th:if="${scheduled.status.name() == 'SENT'}">
+                                            <span class="badge badge-custom bg-success"
+                                                th:if="${scheduled.status.name() == 'SENT'}">
                                                 <span>Đã gửi</span>
                                             </span>
                                             <span class="badge badge-custom bg-warning text-dark">
                                                 <i class="bi bi-calendar-event"></i>
-                                                <span th:text="${#temporals.format(scheduled.scheduledTime, 'dd/MM/yyyy HH:mm')}"></span>
+                                                <span class="scheduled-time"
+                                                    th:data-utc-time="${scheduled.scheduledTime}"
+                                                    th:text="${#temporals.format(scheduled.scheduledTime, 'dd/MM/yyyy HH:mm')}"></span>
                                             </span>
                                         </div>
                                     </div>
                                     <div>
                                         <div class="btn-group" role="group">
                                             <!-- Chỉnh sửa - luôn hiện -->
-                                            <button class="btn btn-sm btn-warning" 
-                                                    th:onclick="'editScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                            <button class="btn btn-sm btn-warning"
+                                                th:onclick="'editScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
                                                 <i class="bi bi-pencil"></i> Sửa
                                             </button>
                                             <!-- Xóa - luôn hiện -->
-                                            <button class="btn btn-sm btn-danger" 
-                                                    th:onclick="'deleteScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                            <button class="btn btn-sm btn-danger"
+                                                th:onclick="'deleteScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
                                                 <i class="bi bi-trash"></i> Xóa
                                             </button>
                                             <!-- Hủy - chỉ hiện khi PENDING -->
-                                            <button class="btn btn-sm btn-secondary" 
-                                                    th:if="${scheduled.status.name() == 'PENDING'}"
-                                                    th:onclick="'cancelScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                            <button class="btn btn-sm btn-secondary"
+                                                th:if="${scheduled.status.name() == 'PENDING'}"
+                                                th:onclick="'cancelScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
                                                 <i class="bi bi-x-circle"></i> Hủy
                                             </button>
                                             <!-- Kích hoạt - chỉ hiện khi CANCELLED -->
-                                            <button class="btn btn-sm btn-success" 
-                                                    th:if="${scheduled.status.name() == 'CANCELLED'}"
-                                                    th:onclick="'activateScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
+                                            <button class="btn btn-sm btn-success"
+                                                th:if="${scheduled.status.name() == 'CANCELLED'}"
+                                                th:onclick="'activateScheduled(' + ${scheduled.scheduledNotificationId} + ')'">
                                                 <i class="bi bi-play-circle"></i> Kích hoạt
                                             </button>
                                         </div>
@@ -621,12 +715,13 @@
                 </div>
             </div>
         </main>
-            </div>
-        </div>
+    </div>
+    </div>
     </div>
 
     <!-- Edit Scheduled Notification Modal -->
-    <div class="modal fade" id="editScheduledModal" tabindex="-1" aria-labelledby="editScheduledModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editScheduledModal" tabindex="-1" aria-labelledby="editScheduledModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
@@ -646,21 +741,21 @@
                                     </label>
                                     <input type="text" class="form-control" id="editTitle" required>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="bi bi-text-paragraph"></i> Nội Dung *
                                     </label>
                                     <textarea class="form-control" id="editBody" rows="4" required></textarea>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="bi bi-image"></i> URL Hình Ảnh
                                     </label>
                                     <input type="url" class="form-control" id="editImageUrl">
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="bi bi-calendar-event"></i> Thời Gian Gửi *
@@ -668,31 +763,29 @@
                                     <input type="datetime-local" class="form-control" id="editScheduledTime" required>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-4">
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="bi bi-tag"></i> Loại Thông Báo *
                                     </label>
                                     <select class="form-select" id="editNotificationType" required>
-                                        <option th:each="type : ${notificationTypes}" 
-                                                th:value="${type}" 
-                                                th:text="${type}"></option>
+                                        <option th:each="type : ${notificationTypes}" th:value="${type}"
+                                            th:text="${type}"></option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="mb-3">
                                     <label class="form-label fw-bold">
                                         <i class="bi bi-people"></i> Đối Tượng Nhận *
                                     </label>
                                     <select class="form-select" id="editTargetAudience" required
-                                            onchange="updateTargetCriteriaHelp('edit')">
-                                        <option th:each="audience : ${targetAudiences}" 
-                                                th:value="${audience}" 
-                                                th:text="${#strings.replace(audience, '_', ' ')}"></option>
+                                        onchange="updateTargetCriteriaHelp('edit')">
+                                        <option th:each="audience : ${targetAudiences}" th:value="${audience}"
+                                            th:text="${#strings.replace(audience, '_', ' ')}"></option>
                                     </select>
                                 </div>
-                                
+
                                 <div class="mb-3" id="editTargetCriteriaDiv">
                                     <label class="form-label fw-bold">
                                         <i class="bi bi-filter"></i> Điều Kiện Lọc
@@ -702,7 +795,7 @@
                                 </div>
                             </div>
                         </div>
-                        
+
                         <!-- Data Payload -->
                         <div class="data-payload-section">
                             <h6 class="fw-bold mb-3">
@@ -753,7 +846,7 @@
             // Hide all tabs
             document.querySelectorAll(".tab-content").forEach(t => t.style.display = "none");
             document.querySelectorAll(".tab-button").forEach(b => b.classList.remove("active"));
-            
+
             // Show selected tab
             document.getElementById(tab + "Tab").style.display = "block";
             event.target.classList.add("active");
@@ -764,12 +857,12 @@
             const audience = document.getElementById(prefix + "TargetAudience").value;
             const helpDiv = document.getElementById(prefix + "TargetCriteriaHelp");
             const criteriaInput = document.getElementById(prefix + "TargetCriteria");
-            
+
             let helpText = "";
             let placeholder = "";
             let required = false;
-            
-            switch(audience) {
+
+            switch (audience) {
                 case "SPECIFIC_USER":
                     helpText = "Nhập User ID cần gửi";
                     placeholder = "VD: 123";
@@ -790,16 +883,71 @@
                     placeholder = "";
                     required = false;
             }
-            
+
             helpDiv.textContent = helpText;
             criteriaInput.placeholder = placeholder;
             criteriaInput.required = required;
         }
 
+        // Update recurrence fields based on type
+        function updateRecurrenceFields() {
+            const recurrenceType = document.getElementById("scheduleRecurrenceType").value;
+            const timeDiv = document.getElementById("recurrenceTimeDiv");
+            const daysDiv = document.getElementById("recurrenceDaysDiv");
+            const descDiv = document.getElementById("recurrenceDescription");
+            const descText = document.getElementById("recurrenceDescriptionText");
+            const scheduleTimeInput = document.getElementById("scheduleTime");
+            const scheduleTimeRequired = document.getElementById("scheduleTimeRequired");
+            const scheduleTimeHelp = document.getElementById("scheduleTimeHelp");
+
+            // Reset
+            timeDiv.style.display = "none";
+            daysDiv.style.display = "none";
+            descDiv.style.display = "none";
+
+            switch (recurrenceType) {
+                case "ONCE":
+                    scheduleTimeInput.required = true;
+                    scheduleTimeRequired.style.display = "inline";
+                    scheduleTimeHelp.textContent = "Chọn thời gian muốn gửi thông báo";
+                    descText.textContent = "Thông báo sẽ được gửi một lần vào thời gian đã chọn.";
+                    descDiv.style.display = "block";
+                    break;
+
+                case "DAILY":
+                    timeDiv.style.display = "block";
+                    scheduleTimeInput.required = false;
+                    scheduleTimeRequired.style.display = "none";
+                    scheduleTimeHelp.textContent = "Không cần thiết cho gửi hàng ngày (chỉ dùng giờ gửi bên dưới)";
+                    descText.textContent = "Thông báo sẽ được gửi HÀNG NGÀY vào giờ đã chọn.";
+                    descDiv.style.display = "block";
+                    break;
+
+                case "WEEKLY":
+                    timeDiv.style.display = "block";
+                    daysDiv.style.display = "block";
+                    scheduleTimeInput.required = false;
+                    scheduleTimeRequired.style.display = "none";
+                    scheduleTimeHelp.textContent = "Không cần thiết cho gửi hàng tuần (chỉ dùng giờ gửi bên dưới)";
+                    descText.textContent = "Thông báo sẽ được gửi HÀNG TUẦN vào các ngày và giờ đã chọn.";
+                    descDiv.style.display = "block";
+                    break;
+
+                case "MONTHLY":
+                    timeDiv.style.display = "block";
+                    scheduleTimeInput.required = true;
+                    scheduleTimeRequired.style.display = "inline";
+                    scheduleTimeHelp.textContent = "Chọn ngày trong tháng để gửi (VD: chọn ngày 1 = gửi đầu tháng)";
+                    descText.textContent = "Thông báo sẽ được gửi HÀNG THÁNG vào cùng ngày (lấy từ 'Thời Gian Gửi') và giờ đã chọn.";
+                    descDiv.style.display = "block";
+                    break;
+            }
+        }
+
         // Send form handler
-        document.getElementById("sendForm").addEventListener("submit", async function(e) {
+        document.getElementById("sendForm").addEventListener("submit", async function (e) {
             e.preventDefault();
-            
+
             const formData = new FormData();
             formData.append("title", document.getElementById("sendTitle").value);
             formData.append("body", document.getElementById("sendBody").value);
@@ -811,15 +959,15 @@
             formData.append("dataValue1", document.getElementById("sendDataValue1").value);
             formData.append("dataKey2", document.getElementById("sendDataKey2").value);
             formData.append("dataValue2", document.getElementById("sendDataValue2").value);
-            
+
             try {
                 const response = await fetch("/admin/notifications/send", {
                     method: "POST",
                     body: formData
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
                     Swal.fire({
                         icon: "success",
@@ -850,9 +998,36 @@
         });
 
         // Schedule form handler
-        document.getElementById("scheduleForm").addEventListener("submit", async function(e) {
+        document.getElementById("scheduleForm").addEventListener("submit", async function (e) {
             e.preventDefault();
-            
+
+            const recurrenceType = document.getElementById("scheduleRecurrenceType").value;
+
+            // Validate recurring fields
+            if (recurrenceType === "WEEKLY") {
+                const checkedDays = document.querySelectorAll('#recurrenceDaysDiv input[type="checkbox"]:checked');
+                if (checkedDays.length === 0) {
+                    Swal.fire({
+                        icon: "warning",
+                        title: "Thiếu thông tin!",
+                        text: "Vui lòng chọn ít nhất một ngày trong tuần",
+                        confirmButtonColor: "#667eea"
+                    });
+                    return;
+                }
+            }
+
+            if ((recurrenceType === "DAILY" || recurrenceType === "WEEKLY" || recurrenceType === "MONTHLY") 
+                && !document.getElementById("scheduleRecurrenceTime").value) {
+                Swal.fire({
+                    icon: "warning",
+                    title: "Thiếu thông tin!",
+                    text: "Vui lòng chọn giờ gửi",
+                    confirmButtonColor: "#667eea"
+                });
+                return;
+            }
+
             const formData = new FormData();
             formData.append("title", document.getElementById("scheduleTitle").value);
             formData.append("body", document.getElementById("scheduleBody").value);
@@ -860,25 +1035,52 @@
             formData.append("notificationType", document.getElementById("scheduleNotificationType").value);
             formData.append("targetAudience", document.getElementById("scheduleTargetAudience").value);
             formData.append("targetCriteria", document.getElementById("scheduleTargetCriteria").value);
-            formData.append("scheduledTime", document.getElementById("scheduleTime").value);
+            
+            // Scheduled time - only required for ONCE and MONTHLY
+            const scheduledTimeValue = document.getElementById("scheduleTime").value;
+            if (scheduledTimeValue) {
+                formData.append("scheduledTime", scheduledTimeValue);
+            } else {
+                // For DAILY and WEEKLY, use current time as placeholder
+                formData.append("scheduledTime", new Date().toISOString().slice(0, 16));
+            }
+            
             formData.append("dataKey1", document.getElementById("scheduleDataKey1").value);
             formData.append("dataValue1", document.getElementById("scheduleDataValue1").value);
             formData.append("dataKey2", document.getElementById("scheduleDataKey2").value);
             formData.append("dataValue2", document.getElementById("scheduleDataValue2").value);
+
+            // Recurring fields
+            formData.append("isRecurring", recurrenceType !== "ONCE");
+            formData.append("recurrenceType", recurrenceType);
             
+            if (recurrenceType !== "ONCE") {
+                formData.append("recurrenceTime", document.getElementById("scheduleRecurrenceTime").value);
+            }
+
+            if (recurrenceType === "WEEKLY") {
+                const checkedDays = Array.from(document.querySelectorAll('#recurrenceDaysDiv input[type="checkbox"]:checked'))
+                    .map(cb => cb.value);
+                formData.append("recurrenceDays", JSON.stringify(checkedDays));
+            }
+
             try {
                 const response = await fetch("/admin/notifications/schedule", {
                     method: "POST",
                     body: formData
                 });
-                
+
                 const result = await response.json();
-                
+
                 if (result.success) {
+                    const message = recurrenceType === "ONCE" 
+                        ? "Đã đặt lịch gửi thông báo một lần"
+                        : `Đã đặt lịch gửi thông báo ${recurrenceType === "DAILY" ? "hàng ngày" : recurrenceType === "WEEKLY" ? "hàng tuần" : "hàng tháng"}`;
+                    
                     Swal.fire({
                         icon: "success",
                         title: "Thành công!",
-                        text: "Đã đặt lịch gửi thông báo",
+                        text: message,
                         confirmButtonColor: "#667eea"
                     }).then(() => {
                         location.reload();
@@ -913,15 +1115,15 @@
                 confirmButtonText: "Hủy thông báo",
                 cancelButtonText: "Đóng"
             });
-            
+
             if (result.isConfirmed) {
                 try {
                     const response = await fetch(`/admin/notifications/cancel/${id}`, {
                         method: "POST"
                     });
-                    
+
                     const data = await response.json();
-                    
+
                     if (data.success) {
                         Swal.fire({
                             icon: "success",
@@ -944,6 +1146,222 @@
                         icon: "error",
                         title: "Lỗi!",
                         text: "Có lỗi xảy ra khi hủy thông báo",
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            }
+        }
+
+        // Edit scheduled notification
+        async function editScheduled(id) {
+            try {
+                // Fetch current notification data
+                const response = await fetch(`/admin/notifications/scheduled/${id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const notification = data.notification;
+
+                    // Populate modal with data
+                    document.getElementById('editScheduledId').value = notification.scheduledNotificationId;
+                    document.getElementById('editTitle').value = notification.title;
+                    document.getElementById('editBody').value = notification.body;
+                    document.getElementById('editImageUrl').value = notification.imageUrl || '';
+                    document.getElementById('editNotificationType').value = notification.notificationType;
+                    document.getElementById('editTargetAudience').value = notification.targetAudience;
+                    document.getElementById('editTargetCriteria').value = notification.targetCriteria || '';
+
+                    // Format scheduled time for datetime-local input
+                    const scheduledTime = new Date(notification.scheduledTime);
+                    const formattedTime = scheduledTime.toISOString().slice(0, 16);
+                    document.getElementById('editScheduledTime').value = formattedTime;
+
+                    // Populate data payload if exists
+                    if (notification.dataPayload) {
+                        const dataPayload = JSON.parse(notification.dataPayload);
+                        const keys = Object.keys(dataPayload);
+                        if (keys.length > 0) {
+                            document.getElementById('editDataKey1').value = keys[0];
+                            document.getElementById('editDataValue1').value = dataPayload[keys[0]];
+                        }
+                        if (keys.length > 1) {
+                            document.getElementById('editDataKey2').value = keys[1];
+                            document.getElementById('editDataValue2').value = dataPayload[keys[1]];
+                        }
+                    }
+
+                    // Update target criteria help
+                    updateTargetCriteriaHelp('edit');
+
+                    // Show modal
+                    const modal = new bootstrap.Modal(document.getElementById('editScheduledModal'));
+                    modal.show();
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: data.message,
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi!",
+                    text: "Có lỗi xảy ra khi tải dữ liệu",
+                    confirmButtonColor: "#667eea"
+                });
+            }
+        }
+
+        // Edit scheduled form handler
+        document.getElementById("editScheduledForm").addEventListener("submit", async function (e) {
+            e.preventDefault();
+
+            const formData = new FormData();
+            formData.append("title", document.getElementById("editTitle").value);
+            formData.append("body", document.getElementById("editBody").value);
+            formData.append("imageUrl", document.getElementById("editImageUrl").value);
+            formData.append("notificationType", document.getElementById("editNotificationType").value);
+            formData.append("targetAudience", document.getElementById("editTargetAudience").value);
+            formData.append("targetCriteria", document.getElementById("editTargetCriteria").value);
+            formData.append("scheduledTime", document.getElementById("editScheduledTime").value);
+            formData.append("dataKey1", document.getElementById("editDataKey1").value);
+            formData.append("dataValue1", document.getElementById("editDataValue1").value);
+            formData.append("dataKey2", document.getElementById("editDataKey2").value);
+            formData.append("dataValue2", document.getElementById("editDataValue2").value);
+
+            const id = document.getElementById("editScheduledId").value;
+
+            try {
+                const response = await fetch(`/admin/notifications/update/${id}`, {
+                    method: "PUT",
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "Thành công!",
+                        text: "Đã cập nhật thông báo",
+                        confirmButtonColor: "#667eea"
+                    }).then(() => {
+                        // Close modal and reload page
+                        bootstrap.Modal.getInstance(document.getElementById('editScheduledModal')).hide();
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: result.message,
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Lỗi!",
+                    text: "Có lỗi xảy ra khi cập nhật",
+                    confirmButtonColor: "#667eea"
+                });
+            }
+        });
+
+        // Delete scheduled notification
+        async function deleteScheduled(id) {
+            const result = await Swal.fire({
+                title: "Xác nhận xóa?",
+                text: "Bạn có chắc muốn xóa vĩnh viễn thông báo đã lên lịch này? Hành động này không thể hoàn tác.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#d33",
+                cancelButtonColor: "#667eea",
+                confirmButtonText: "Xóa vĩnh viễn",
+                cancelButtonText: "Đóng"
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/notifications/delete/${id}`, {
+                        method: "DELETE"
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Đã xóa!",
+                            text: "Thông báo đã được xóa vĩnh viễn",
+                            confirmButtonColor: "#667eea"
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi!",
+                            text: data.message,
+                            confirmButtonColor: "#667eea"
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: "Có lỗi xảy ra khi xóa thông báo",
+                        confirmButtonColor: "#667eea"
+                    });
+                }
+            }
+        }
+
+        // Activate scheduled notification
+        async function activateScheduled(id) {
+            const result = await Swal.fire({
+                title: "Xác nhận kích hoạt?",
+                text: "Bạn có chắc muốn kích hoạt lại thông báo đã lên lịch này?",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#667eea",
+                confirmButtonText: "Kích hoạt",
+                cancelButtonText: "Đóng"
+            });
+
+            if (result.isConfirmed) {
+                try {
+                    const response = await fetch(`/admin/notifications/activate/${id}`, {
+                        method: "POST"
+                    });
+
+                    const data = await response.json();
+
+                    if (data.success) {
+                        Swal.fire({
+                            icon: "success",
+                            title: "Đã kích hoạt!",
+                            text: "Thông báo đã được kích hoạt lại",
+                            confirmButtonColor: "#667eea"
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: "error",
+                            title: "Lỗi!",
+                            text: data.message,
+                            confirmButtonColor: "#667eea"
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Lỗi!",
+                        text: "Có lỗi xảy ra khi kích hoạt thông báo",
                         confirmButtonColor: "#667eea"
                     });
                 }
@@ -1013,7 +1431,7 @@
         }
 
         // Edit scheduled form handler
-        document.getElementById("editScheduledForm").addEventListener("submit", async function(e) {
+        document.getElementById("editScheduledForm").addEventListener("submit", async function (e) {
             e.preventDefault();
             
             const formData = new FormData();
@@ -1166,10 +1584,36 @@
             }
         }
 
+        // Convert UTC time to +7 timezone for display
+        function formatScheduledTime(utcTimeString) {
+            // Parse the LocalDateTime string (format: yyyy-MM-ddTHH:mm:ss.SSS)
+            const utcDate = new Date(utcTimeString); // Already in UTC
+            const userTimezoneOffset = 7 * 60; // +7 hours in minutes
+            const userTime = new Date(utcDate.getTime() + (userTimezoneOffset * 60 * 1000));
+
+            const day = String(userTime.getDate()).padStart(2, '0');
+            const month = String(userTime.getMonth() + 1).padStart(2, '0');
+            const year = userTime.getFullYear();
+            const hours = String(userTime.getHours()).padStart(2, '0');
+            const minutes = String(userTime.getMinutes()).padStart(2, '0');
+
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
         // Initialize
-        $(document).ready(function() {
+        $(document).ready(function () {
             updateTargetCriteriaHelp("send");
             updateTargetCriteriaHelp("schedule");
+
+            // Convert all scheduled times to +7 timezone
+            document.querySelectorAll('.scheduled-time').forEach(function (element) {
+                const utcTime = element.getAttribute('data-utc-time');
+                if (utcTime) {
+                    element.textContent = formatScheduledTime(utcTime);
+                }
+            });
         });
     </script>
-</body></html>
+</body>
+
+</html>

@@ -25,18 +25,22 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.piano.learn.PianoLearn.dto.auth.ChangePasswordRequest;
+import com.piano.learn.PianoLearn.dto.auth.ForgotPasswordRequest;
 import com.piano.learn.PianoLearn.dto.auth.LoginRequest;
 import com.piano.learn.PianoLearn.dto.auth.LoginResponse;
 import com.piano.learn.PianoLearn.dto.auth.RegisterRequest;
+import com.piano.learn.PianoLearn.dto.auth.ResetPasswordRequest;
 import com.piano.learn.PianoLearn.dto.auth.UserDetailResponse;
 import com.piano.learn.PianoLearn.dto.auth.UserInfo;
 import com.piano.learn.PianoLearn.dto.auth.UserRankingInfo;
+import com.piano.learn.PianoLearn.dto.auth.VerifyOTPRequest;
 import com.piano.learn.PianoLearn.entity.Contribution;
 import com.piano.learn.PianoLearn.entity.auth.User;
 import com.piano.learn.PianoLearn.security.JwtUtil;
 import com.piano.learn.PianoLearn.service.UploadService;
 import com.piano.learn.PianoLearn.service.UserService;
 import com.piano.learn.PianoLearn.service.admin.ContributionService;
+import com.piano.learn.PianoLearn.service.auth.PasswordResetService;
 
 import jakarta.validation.Valid;
 
@@ -61,6 +65,9 @@ public class AuthController {
 
     @Autowired
     private ContributionService contributionService; 
+
+    @Autowired
+    private PasswordResetService passwordResetService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
@@ -496,6 +503,121 @@ public class AuthController {
         } catch (Exception e) {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    // ========================================
+    // PASSWORD RESET APIs
+    // ========================================
+    
+    /**
+     * Bước 1: Gửi OTP qua email
+     * POST /api/auth/forgot-password
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(fe -> errors.put(fe.getField(), fe.getDefaultMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+        
+        try {
+            passwordResetService.sendPasswordResetOTP(request.getEmail());
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Mã OTP đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư.");
+            return ResponseEntity.ok(response);
+            
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Có lỗi xảy ra. Vui lòng thử lại sau.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
+    }
+    
+    /**
+     * Bước 2: Xác thực OTP
+     * POST /api/auth/verify-otp
+     */
+    @PostMapping("/verify-otp")
+    public ResponseEntity<?> verifyOTP(@Valid @RequestBody VerifyOTPRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(fe -> errors.put(fe.getField(), fe.getDefaultMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+        
+        try {
+            boolean isValid = passwordResetService.verifyOTP(request.getEmail(), request.getOtpCode());
+            
+            if (isValid) {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", true);
+                response.put("message", "Mã OTP hợp lệ");
+                return ResponseEntity.ok(response);
+            } else {
+                Map<String, Object> response = new HashMap<>();
+                response.put("success", false);
+                response.put("error", "Mã OTP không hợp lệ hoặc đã hết hạn");
+                return ResponseEntity.badRequest().body(response);
+            }
+            
+        } catch (RuntimeException e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        } catch (Exception e) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", false);
+            response.put("error", "Có lỗi xảy ra. Vui lòng thử lại sau.");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+    
+    /**
+     * Bước 3: Đặt lại mật khẩu
+     * POST /api/auth/reset-password
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request, BindingResult bindingResult) {
+        if (bindingResult.hasErrors()) {
+            Map<String, String> errors = new HashMap<>();
+            bindingResult.getFieldErrors().forEach(fe -> errors.put(fe.getField(), fe.getDefaultMessage()));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
+        }
+        
+        try {
+            // Validate password match
+            if (!request.getNewPassword().equals(request.getConfirmPassword())) {
+                Map<String, String> error = new HashMap<>();
+                error.put("error", "Mật khẩu mới và xác nhận mật khẩu không khớp");
+                return ResponseEntity.badRequest().body(error);
+            }
+            
+            passwordResetService.resetPassword(
+                request.getEmail(), 
+                request.getOtpCode(), 
+                request.getNewPassword()
+            );
+            
+            Map<String, String> response = new HashMap<>();
+            response.put("message", "Đặt lại mật khẩu thành công! Bạn có thể đăng nhập với mật khẩu mới.");
+            return ResponseEntity.ok(response);
+            
+        } catch (RuntimeException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", e.getMessage());
+            return ResponseEntity.badRequest().body(error);
+        } catch (Exception e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("error", "Có lỗi xảy ra. Vui lòng thử lại sau.");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }

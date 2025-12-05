@@ -34,4 +34,21 @@ public interface ScheduledNotificationRepository extends JpaRepository<Scheduled
      * Đếm số lượng pending notifications
      */
     Long countByStatus(ScheduleStatus status);
+    
+    /**
+     * Lấy notifications gửi một lần đã đến hạn
+     */
+    List<ScheduledNotification> findByStatusAndIsRecurringAndScheduledTimeBefore(
+        ScheduleStatus status,
+        Boolean isRecurring,
+        LocalDateTime time
+    );
+    
+    /**
+     * Lấy recurring notifications đang active
+     */
+    List<ScheduledNotification> findByStatusAndIsRecurring(
+        ScheduleStatus status,
+        Boolean isRecurring
+    );
 }

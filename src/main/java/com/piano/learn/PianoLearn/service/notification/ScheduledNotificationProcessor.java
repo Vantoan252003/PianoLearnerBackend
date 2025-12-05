@@ -1,6 +1,8 @@
 package com.piano.learn.PianoLearn.service.notification;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,7 +50,7 @@ public class ScheduledNotificationProcessor {
     @Scheduled(fixedRate = 60000) // Chạy mỗi 1 phút
     @Transactional
     public void processScheduledNotifications() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = ZonedDateTime.now(ZoneOffset.UTC).toLocalDateTime();
         
         System.out.println("=== Scheduled Notification Processor Debug ===");
         System.out.println("Current time (now): " + now);

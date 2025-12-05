@@ -36,6 +36,13 @@ CREATE TABLE IF NOT EXISTS scheduled_notifications (
     target_audience VARCHAR(50),
     target_criteria VARCHAR(500),
     scheduled_time DATETIME NOT NULL,
+    -- Recurring notification fields
+    is_recurring BOOLEAN DEFAULT FALSE,
+    recurrence_type VARCHAR(20) COMMENT 'ONCE, DAILY, WEEKLY, MONTHLY',
+    recurrence_days VARCHAR(100) COMMENT 'JSON array: [1,2,3,4,5] for days of week (1=Monday, 7=Sunday)',
+    recurrence_time VARCHAR(10) COMMENT 'HH:mm format (e.g., 09:00)',
+    last_sent_at DATETIME COMMENT 'Lần gửi cuối cùng (cho recurring)',
+    -- Other fields
     status VARCHAR(20) DEFAULT 'PENDING',
     created_by INT,
     sent_at DATETIME,
@@ -44,7 +51,9 @@ CREATE TABLE IF NOT EXISTS scheduled_notifications (
     FOREIGN KEY (created_by) REFERENCES users(user_id) ON DELETE SET NULL,
     INDEX idx_scheduled_time (scheduled_time),
     INDEX idx_status (status),
-    INDEX idx_created_by (created_by)
+    INDEX idx_created_by (created_by),
+    INDEX idx_is_recurring (is_recurring),
+    INDEX idx_recurrence_type (recurrence_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Comments
