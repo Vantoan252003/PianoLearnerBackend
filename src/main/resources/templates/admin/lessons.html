@@ -120,12 +120,13 @@
                         <thead style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                             <tr>
                                 <th>ID</th>
-                                <th>Tiêu đề</th>
+                                <th>Tên bài học</th>
                                 <th>Khóa học</th>
                                 <th>Thứ tự</th>
                                 <th>EXP yêu cầu</th>
                                 <th>EXP thưởng</th>
                                 <th>Thời lượng</th>
+                                <th>Lesson URL</th>
                                 <th>Thao tác</th>
                             </tr>
                         </thead>
@@ -318,6 +319,15 @@
                     </span>`;
                 }
                 
+                let lessonUrlCell = '<span class="text-muted">Chưa có</span>';
+                if (item.videoUrl) {
+                    lessonUrlCell = `
+                        <button class="btn btn-sm btn-info" onclick="viewPDF(${item.lessonId}, '${item.lessonTitle}')" title="Xem PDF">
+                            <i class="bi bi-file-earmark-pdf"></i> Xem PDF
+                        </button>
+                    `;
+                }
+                
                 tr.innerHTML = `
                     <td>${item.lessonId}</td>
                     <td><strong>${item.lessonTitle}</strong></td>
@@ -326,6 +336,7 @@
                     <td>${expRequireBadge}</td>
                     <td><span class="badge badge-reward"><i class="bi bi-star-fill"></i> ${item.expReward || 10}</span></td>
                     <td><i class="bi bi-clock"></i> ${item.durationMinutes || '-'} phút</td>
+                    <td>${lessonUrlCell}</td>
                     <td>
                         <button class="btn btn-sm btn-warning" onclick="editData(${item.lessonId})" title="Sửa">
                             <i class="bi bi-pencil"></i>
@@ -434,6 +445,12 @@
                 console.error('Error:', error);
                 alert('Lỗi khi xóa dữ liệu!');
             }
+        }
+
+        function viewPDF(lessonId, lessonTitle) {
+            // Mở PDF trong tab mới
+            const pdfUrl = `/api/auth/course/lesson/stream/${lessonId}`;
+            window.open(pdfUrl, '_blank', 'width=1000,height=800');
         }
 
         loadCourses();

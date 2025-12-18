@@ -111,6 +111,10 @@
                         th:classappend="${active}=='lessons' ? ' active' : ''">
                         <i class="bi bi-journal-text"></i> Bài học
                     </a>
+                    <a href="/admin/lesson-guide" class="list-group-item list-group-item-action nested-item"
+                        th:classappend="${active}=='lesson-guide' ? ' active' : ''">
+                        <i class="bi bi-file-earmark-text"></i> Hướng dẫn Bài học
+                    </a>
                     <a href="/admin/exercises" class="list-group-item list-group-item-action nested-item"
                         th:classappend="${active}=='exercises' ? ' active' : ''">
                         <i class="bi bi-pencil-square"></i> Bài tập

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ import com.piano.learn.PianoLearn.service.admin.LessonService;
 
 @RestController
 @RequestMapping("/api/admin/lessons")
+@CrossOrigin(origins = "*")
 public class AdminLessonController {
     
     @Autowired
@@ -25,7 +27,10 @@ public class AdminLessonController {
     
     @GetMapping
     public ResponseEntity<List<Lesson>> getAllLessons() {
-        return ResponseEntity.ok(lessonService.getAllLessons());
+        System.out.println("AdminLessonController.getAllLessons() called");
+        List<Lesson> lessons = lessonService.getAllLessons();
+        System.out.println("Found " + lessons.size() + " lessons");
+        return ResponseEntity.ok(lessons);
     }
     
     @GetMapping("/{id}")

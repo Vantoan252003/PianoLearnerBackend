@@ -33,8 +33,9 @@ public class AdminAuthenticationFilter extends OncePerRequestFilter {
 
         String requestURI = request.getRequestURI();
 
-        // Only apply to admin pages (not APIs)
-        if (requestURI.startsWith("/admin/") && !requestURI.startsWith("/admin/login")) {
+        // Apply to both admin pages and admin API endpoints
+        if ((requestURI.startsWith("/admin/") || requestURI.startsWith("/api/admin/")) 
+            && !requestURI.startsWith("/admin/login")) {
             String token = null;
 
             // Try to get token from cookie first
@@ -74,11 +75,11 @@ public class AdminAuthenticationFilter extends OncePerRequestFilter {
                             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                             SecurityContextHolder.getContext().setAuthentication(authToken);
 
-                            System.out.println("Admin authenticated: " + email);
+                            System.out.println("Admin authenticated: " + email + " for URI: " + requestURI);
                         }
                     }
                 } catch (Exception e) {
-                    System.err.println("Admin authentication failed: " + e.getMessage());
+                    System.err.println("Admin authentication failed for URI " + requestURI + ": " + e.getMessage());
                 }
             } else {
                 System.out.println("No admin token found for: " + requestURI);

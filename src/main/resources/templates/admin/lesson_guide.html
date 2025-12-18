@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Bài Học - Piano Learner Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Quill Editor CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    
+    <style>
+        .editor-container {
+            height: 600px;
+            background: white;
+        }
+        #editor {
+            height: 550px;
+        }
+        .lesson-select {
+            max-width: 400px;
+        }
+        .toolbar-buttons {
+            padding: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <th:block th:replace="~{admin/parts/navbar :: navbar}"></th:block>
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 p-0 bg-light min-vh-100">
+                <th:block th:replace="~{admin/parts/sidebar :: sidebar('lesson-guide')}"></th:block>
+            </div>
+            
+            <div class="col-md-10 p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="bi bi-file-earmark-text"></i> Hướng Dẫn Bài Học</h2>
+                </div>
+                
+                <!-- Lesson Selection -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="lessonSelect" class="form-label fw-bold">Chọn Bài Học:</label>
+                                <select id="lessonSelect" class="form-select lesson-select">
+                                    <option value="">-- Chọn bài học --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold">Thông tin:</label>
+                                <div id="lessonInfo" class="text-muted">
+                                    <small>Chọn một bài học để bắt đầu soạn hướng dẫn</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Editor -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="toolbar-buttons mb-3">
+                            <button id="loadBtn" class="btn btn-secondary" disabled>
+                                <i class="bi bi-folder-open"></i> Tải Hướng Dẫn Hiện Tại
+                            </button>
+                            <button id="saveBtn" class="btn btn-success" disabled>
+                                <i class="bi bi-cloud-upload"></i> Lưu & Upload PDF
+                            </button>
+                            <button id="previewBtn" class="btn btn-info" disabled>
+                                <i class="bi bi-eye"></i> Xem Trước
+                            </button>
+                            <span id="statusMsg" class="ms-3 text-muted"></span>
+                        </div>
+                        
+                        <div class="editor-container">
+                            <div id="editor">
+                                <h1>Hướng Dẫn Bài Học</h1>
+                                <p>Bắt đầu soạn nội dung hướng dẫn cho bài học của bạn...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Quill Editor JS -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    
+    <script>
+        let quill;
+        let selectedLessonId = null;
+        
+        // Initialize Quill Editor
+        document.addEventListener('DOMContentLoaded', function() {
+            var toolbarOptions = [
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                [{ 'font': [] }],
+                [{ 'size': ['small', false, 'large', 'huge'] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'indent': '-1'}, { 'indent': '+1' }],
+                [{ 'direction': 'rtl' }],
+                [{ 'align': [] }],
+                ['blockquote', 'code-block'],
+                ['link', 'image', 'video'],
+                ['clean']
+            ];
+
+            quill = new Quill('#editor', {
+                modules: {
+                    toolbar: toolbarOptions
+                },
+                theme: 'snow',
+                placeholder: 'Viết nội dung hướng dẫn...'
+            });
+            
+            // Load lessons
+            loadLessons();
+            
+            // Event listeners
+            document.getElementById('lessonSelect').addEventListener('change', onLessonChange);
+            document.getElementById('loadBtn').addEventListener('click', loadCurrentGuide);
+            document.getElementById('saveBtn').addEventListener('click', saveAndUploadPDF);
+            document.getElementById('previewBtn').addEventListener('click', previewContent);
+        });
+        
+        // Load all lessons
+        function loadLessons() {
+            showStatus('Đang tải danh sách bài học...', 'info');
+            
+            fetch('/api/admin/lessons', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(lessons => {
+                    console.log('Lessons loaded:', lessons);
+                    const select = document.getElementById('lessonSelect');
+                    
+                    if (!Array.isArray(lessons) || lessons.length === 0) {
+                        showStatus('Không có bài học nào', 'warning');
+                        return;
+                    }
+                    
+                    lessons.forEach(lesson => {
+                        const option = document.createElement('option');
+                        option.value = lesson.lessonId;
+                        option.textContent = `${lesson.lessonTitle} (${lesson.course?.courseTitle || 'N/A'})`;
+                        option.dataset.lesson = JSON.stringify(lesson);
+                        select.appendChild(option);
+                    });
+                    
+                    showStatus(`Đã tải ${lessons.length} bài học`, 'success');
+                })
+                .catch(error => {
+                    console.error('Error loading lessons:', error);
+                    showStatus('Lỗi khi tải danh sách bài học: ' + error.message, 'error');
+                });
+        }
+        
+        // Handle lesson selection change
+        function onLessonChange(e) {
+            const select = e.target;
+            const option = select.options[select.selectedIndex];
+            
+            if (select.value) {
+                selectedLessonId = select.value;
+                const lesson = JSON.parse(option.dataset.lesson);
+                
+                // Show lesson info
+                document.getElementById('lessonInfo').innerHTML = `
+                    <strong>Tên:</strong> ${lesson.lessonTitle}<br>
+                    <strong>Khóa học:</strong> ${lesson.course?.courseTitle || 'N/A'}<br>
+                    <strong>Thứ tự:</strong> ${lesson.lessonOrder}<br>
+                    <strong>Video URL:</strong> ${lesson.videoUrl || '<span class="text-danger">Chưa có</span>'}
+                `;
+                
+                // Enable buttons
+                document.getElementById('loadBtn').disabled = false;
+                document.getElementById('saveBtn').disabled = false;
+                document.getElementById('previewBtn').disabled = false;
+                
+                showStatus('Đã chọn bài học: ' + lesson.lessonTitle, 'success');
+            } else {
+                selectedLessonId = null;
+                document.getElementById('lessonInfo').innerHTML = '<small>Chọn một bài học để bắt đầu soạn hướng dẫn</small>';
+                document.getElementById('loadBtn').disabled = true;
+                document.getElementById('saveBtn').disabled = true;
+                document.getElementById('previewBtn').disabled = true;
+            }
+        }
+        
+        // Load current guide (if exists)
+        function loadCurrentGuide() {
+            if (!selectedLessonId) return;
+            
+            showStatus('Đang tải hướng dẫn hiện tại...', 'info');
+            
+            fetch(`/api/admin/lesson-guide/${selectedLessonId}`)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Chưa có hướng dẫn');
+                })
+                .then(data => {
+                    if (data.content) {
+                        quill.root.innerHTML = data.content;
+                        showStatus('Đã tải hướng dẫn thành công', 'success');
+                    }
+                })
+                .catch(error => {
+                    showStatus('Chưa có hướng dẫn cho bài học này', 'warning');
+                });
+        }
+        
+        // Save and upload PDF
+        function saveAndUploadPDF() {
+            if (!selectedLessonId) {
+                showStatus('Vui lòng chọn bài học', 'error');
+                return;
+            }
+            
+            const content = quill.root.innerHTML;
+            
+            if (!content.trim() || content.trim() === '<p><br></p>') {
+                showStatus('Nội dung không được để trống', 'error');
+                return;
+            }
+            
+            showStatus('Đang xử lý và upload PDF...', 'info');
+            document.getElementById('saveBtn').disabled = true;
+            
+            fetch('/api/admin/lesson-guide/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    lessonId: selectedLessonId,
+                    content: content
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Upload failed');
+                }
+                return response.json();
+            })
+            .then(data => {
+                showStatus('✓ Đã lưu và upload thành công! PDF URL: ' + data.pdfUrl, 'success');
+                // Refresh lesson info
+                document.getElementById('lessonSelect').dispatchEvent(new Event('change'));
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showStatus('Lỗi khi lưu và upload PDF', 'error');
+            })
+            .finally(() => {
+                document.getElementById('saveBtn').disabled = false;
+            });
+        }
+        
+        // Preview content
+        function previewContent() {
+            const content = quill.root.innerHTML;
+            const previewWindow = window.open('', 'Preview', 'width=800,height=600');
+            previewWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Preview</title>
+                    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+                    <style>
+                        body { padding: 20px; font-family: Arial, sans-serif; }
+                        .ql-editor { border: 1px solid #ccc; padding: 20px; min-height: 400px; }
+                    </style>
+                </head>
+                <body>
+                    <h2>Xem Trước Hướng Dẫn</h2>
+                    <div class="ql-editor">
+                        ${content}
+                    </div>
+                </body>
+                </html>
+            `);
+            previewWindow.document.close();
+        }
+        
+        // Show status message
+        function showStatus(message, type) {
+            const statusMsg = document.getElementById('statusMsg');
+            statusMsg.textContent = message;
+            statusMsg.className = 'ms-3';
+            
+            switch(type) {
+                case 'success':
+                    statusMsg.classList.add('text-success');
+                    break;
+                case 'error':
+                    statusMsg.classList.add('text-danger');
+                    break;
+                case 'warning':
+                    statusMsg.classList.add('text-warning');
+                    break;
+                case 'info':
+                    statusMsg.classList.add('text-info');
+                    break;
+                default:
+                    statusMsg.classList.add('text-muted');
+            }
+            
+            // Auto clear after 5 seconds for non-error messages
+            if (type !== 'error') {
+                setTimeout(() => {
+                    statusMsg.textContent = '';
+                }, 5000);
+            }
+        }
+    </script>
+</body>
+
+</html>
